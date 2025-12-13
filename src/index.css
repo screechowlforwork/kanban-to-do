@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100%;
+  width: 100%;
+}
+
+/* Custom Scrollbar Styling (UX Polish) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 9999px; /* rounded-full */
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* Light mode scrollbar */
+.bg-slate-50 ::-webkit-scrollbar-thumb,
+[class*="from-indigo"] ::-webkit-scrollbar-thumb,
+[class*="from-cyan"] ::-webkit-scrollbar-thumb,
+[class*="from-orange"] ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+.bg-slate-50 ::-webkit-scrollbar-thumb:hover,
+[class*="from-indigo"] ::-webkit-scrollbar-thumb:hover,
+[class*="from-cyan"] ::-webkit-scrollbar-thumb:hover,
+[class*="from-orange"] ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@layer utilities {
+    .glass-panel {
+        @apply bg-cardbg backdrop-blur-[12px] border border-white/5 shadow-glass;
+    }
+    
+    /* Gradient animation for dynamic sky mode */
+    .animate-gradient-slow {
+        background-size: 400% 400%;
+    }
+}
