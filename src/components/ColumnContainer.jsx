@@ -109,7 +109,7 @@ function ColumnContainer({
                 ref={setNodeRef}
                 style={style}
                 className={cn(
-                    "w-[350px] h-[500px] max-h-[80vh] rounded-xl flex flex-col opacity-60",
+                    "min-w-[85vw] md:min-w-[350px] md:w-[350px] h-[500px] max-h-[80vh] rounded-xl flex flex-col opacity-60",
                     "border-2 border-dashed border-gray-600 bg-black/20"
                 )}
             ></div>
@@ -121,11 +121,8 @@ function ColumnContainer({
             ref={setNodeRef}
             style={style}
             className={cn(
-                "w-[350px] h-[500px] max-h-[80vh] rounded-xl flex flex-col",
-                "transition-colors duration-200",
-                // Glassmorphism container for the column can be subtle or just layout
-                // User asked for breathing room.
-                "mr-6" // Breathing room between columns
+                "min-w-[85vw] md:min-w-[350px] md:w-[350px] snap-center shrink-0 h-[500px] max-h-[80vh] rounded-xl flex flex-col",
+                "transition-colors duration-200"
             )}
         >
             {/* Column Header */}
@@ -163,7 +160,7 @@ function ColumnContainer({
                     {editMode && (
                         <input
                             className={cn(
-                                "bg-black/50 focus:border-neon-purple border border-white/10 rounded outline-none px-2 py-1 text-white",
+                                "bg-black/50 focus:border-neon-purple border border-white/10 rounded outline-none px-2 py-1 text-white text-base md:text-sm",
                             )}
                             value={column.title}
                             onChange={(e) => updateColumn(column.id, e.target.value)}

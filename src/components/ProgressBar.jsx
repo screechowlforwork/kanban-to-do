@@ -8,7 +8,7 @@ function ProgressBar({ tasks }) {
     const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     return (
-        <div className="mb-2 flex-1 min-w-[300px]">
+        <div className="mb-2 flex-1 min-w-[200px] md:min-w-[300px]">
             {/* Label */}
             <div className="flex items-center justify-between mb-2">
                 <span className={cn(

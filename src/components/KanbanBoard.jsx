@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Menu } from "lucide-react";
 import {
     DndContext,
     DragOverlay,
@@ -140,7 +140,7 @@ const defaultTasks = [
     },
 ];
 
-function KanbanBoard({ projectId }) {
+function KanbanBoard({ projectId, onToggleSidebar }) {
     const { themeConfig, isDark, theme } = useTheme();
     const [columns, setColumns] = useState(() => {
         const saved = safeJSONParse(`kanban-columns-${projectId}`, null);
@@ -405,11 +405,22 @@ function KanbanBoard({ projectId }) {
         >
             <div className="min-w-full w-fit p-8 flex flex-col gap-6 h-full">
                 {/* Header */}
-                <div className="w-full flex justify-between items-center gap-4">
-                    <ProgressBar tasks={tasks} />
+                <div className="w-full flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+                    <div className="flex items-center gap-2 flex-1 w-full">
+                        <button
+                            className={cn(
+                                "md:hidden p-2 rounded-lg transition-colors shrink-0",
+                                isDark ? "text-gray-400 hover:bg-white/10 hover:text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                            )}
+                            onClick={onToggleSidebar}
+                        >
+                            <Menu size={24} />
+                        </button>
+                        <ProgressBar tasks={tasks} />
+                    </div>
                     <input
                         className={cn(
-                            "p-3 rounded-lg outline-none w-[300px] shrink-0 transition-all duration-300",
+                            "p-3 rounded-lg outline-none w-full md:w-[300px] shrink-0 transition-all duration-300",
                             themeConfig.inputBg,
                             isDark 
                                 ? "focus:border-neon-purple focus:shadow-[0_0_15px_rgba(184,51,255,0.2)]"
@@ -430,7 +441,7 @@ function KanbanBoard({ projectId }) {
                     onDragEnd={onDragEnd}
                     onDragOver={onDragOver}
                 >
-                    <div className="flex gap-6 h-full items-start">
+                    <div className="flex flex-row overflow-x-auto snap-x snap-mandatory h-full md:overflow-visible md:snap-none pb-4 gap-4 px-4 md:px-0 items-start scrollbar-hide">
                         <SortableContext items={columnsId} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <ColumnContainer

@@ -4,7 +4,7 @@ import { Plus, Trash2, FolderKanban, Pencil } from "lucide-react";
 import { cn } from "../utils";
 import { useTheme } from "../contexts/ThemeContext";
 
-function ProjectSidebar({ projects, activeProjectId, onSelectProject, onCreateProject, onDeleteProject, onRenameProject }) {
+function ProjectSidebar({ projects, activeProjectId, onSelectProject, onCreateProject, onDeleteProject, onRenameProject, isOpen, onClose }) {
     const { themeConfig, isDark } = useTheme();
     const [isCreating, setIsCreating] = useState(false);
     const [newProjectName, setNewProjectName] = useState("");
@@ -88,11 +88,21 @@ function ProjectSidebar({ projects, activeProjectId, onSelectProject, onCreatePr
     };
 
     return (
-        <div className={cn(
-            "w-[260px] min-w-[260px] flex flex-col h-screen z-20 transition-colors duration-500",
-            themeConfig.sidebarBg,
-            themeConfig.borderColor
-        )}>
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden animate-in fade-in"
+                    onClick={onClose}
+                />
+            )}
+            <div className={cn(
+                "fixed inset-y-0 left-0 h-screen z-50 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+                "w-[260px] md:w-[260px] md:static md:translate-x-0 shadow-2xl md:shadow-none",
+                isOpen ? "translate-x-0" : "-translate-x-full",
+                themeConfig.sidebarBg,
+                themeConfig.borderColor
+            )}>
             <div className={cn("p-6 flex items-center gap-3", themeConfig.borderColor, "border-b")}>
                 <div className={cn(
                     "p-2 rounded-lg",
@@ -301,6 +311,7 @@ function ProjectSidebar({ projects, activeProjectId, onSelectProject, onCreatePr
                 document.body
             )}
         </div>
+        </>
     );
 }
 

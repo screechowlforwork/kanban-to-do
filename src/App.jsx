@@ -61,6 +61,8 @@ function AppContent() {
         setProjects(newProjects);
     };
 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     return (
         <div className={cn(
             "flex h-screen w-full overflow-hidden transition-colors duration-500 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]",
@@ -71,13 +73,22 @@ function AppContent() {
             <ProjectSidebar
                 projects={projects}
                 activeProjectId={activeProjectId}
-                onSelectProject={setActiveProjectId}
+                onSelectProject={(id) => {
+                    setActiveProjectId(id);
+                    setIsSidebarOpen(false); // Close sidebar on selection (mobile)
+                }}
                 onCreateProject={handleCreateProject}
                 onDeleteProject={handleDeleteProject}
                 onRenameProject={handleRenameProject}
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
             />
             <main className="flex-1 h-full overflow-hidden relative">
-                <KanbanBoard key={activeProjectId} projectId={activeProjectId} />
+                <KanbanBoard 
+                    key={activeProjectId} 
+                    projectId={activeProjectId} 
+                    onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                />
             </main>
             <ThemeSwitcher />
         </div>

@@ -133,7 +133,7 @@ function TaskCard({ task, deleteTask, updateTask }) {
             >
                  <div className="flex justify-between items-center mb-3 gap-2">
                     <select
-                        className="bg-white/10 text-gray-100 text-xs rounded px-2 py-1 border border-white/20 outline-none cursor-pointer appearance-none pr-6"
+                        className="bg-white/10 text-gray-100 text-base md:text-xs rounded px-2 py-1 border border-white/20 outline-none cursor-pointer appearance-none pr-6"
                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`, backgroundPosition: 'right 0.25rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.25em 1.25em' }}
                         value={task.priority || "Medium"}
                         onChange={(e) => updateTask(task.id, { priority: e.target.value })}
@@ -145,14 +145,14 @@ function TaskCard({ task, deleteTask, updateTask }) {
                     </select>
                     <button
                         onClick={() => setEditMode(false)}
-                        className="text-gray-400 hover:text-white text-xs px-2 py-1 rounded hover:bg-white/10"
+                        className="text-gray-400 hover:text-white text-base md:text-xs px-2 py-1 rounded hover:bg-white/10"
                     >
                         Done
                     </button>
                 </div>
 
                 <input
-                    className="bg-transparent text-gray-100 font-semibold text-lg mb-2 outline-none placeholder:text-gray-600 w-full"
+                    className="bg-transparent text-gray-100 font-semibold text-base md:text-lg mb-2 outline-none placeholder:text-gray-600 w-full"
                     value={task.title}
                     autoFocus
                     placeholder="Title"
@@ -169,7 +169,7 @@ function TaskCard({ task, deleteTask, updateTask }) {
                 />
                 
                 <textarea
-                    className="bg-transparent text-gray-400 text-sm resize-none outline-none h-full min-h-[60px] placeholder:text-gray-700 w-full"
+                    className="bg-transparent text-gray-400 text-base md:text-sm resize-none outline-none h-full min-h-[60px] placeholder:text-gray-700 w-full"
                     value={task.content}
                     placeholder="Details..."
                     onKeyDown={(e) => {
@@ -212,12 +212,12 @@ function TaskCard({ task, deleteTask, updateTask }) {
             <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-colors", pStyle.line)} />
 
             <div className="flex justify-between items-start mb-3 pl-2">
-                <h3 className={cn("font-medium leading-snug pr-6 text-[15px]", themeConfig.textPrimary)}>
+                <h3 className={cn("font-medium leading-snug pr-6 text-base md:text-sm", themeConfig.textPrimary)}>
                     {task.title}
                 </h3>
                 {task.priority && (
                     <span className={cn(
-                        "text-[10px] px-2 py-1 rounded-full font-medium border uppercase tracking-wider",
+                        "text-[11px] px-2 py-1 rounded-full font-medium border uppercase tracking-wider",
                         pStyle.badge
                     )}>
                         {task.priority}
@@ -264,7 +264,7 @@ function TaskCard({ task, deleteTask, updateTask }) {
                                 setIsDeleting(true);
                             }}
                             onPointerDown={(e) => e.stopPropagation()}
-                            className="p-1.5 rounded-md text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors"
+                            className="p-2 rounded-md text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors"
                         >
                             <Trash2 size={16} />
                         </button>
