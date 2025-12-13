@@ -180,13 +180,13 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
     const sensors = useSensors(
         useSensor(MouseSensor, {
             activationConstraint: {
-                distance: 8,
+                distance: 10,
             },
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 150,
-                tolerance: 8,
+                delay: 250,
+                tolerance: 5,
             },
         })
     );
@@ -410,16 +410,9 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
 
     return (
         <div
-            className="
-                h-full
-                w-full
-                overflow-x-auto
-                overflow-y-hidden
-                flex
-                flex-col
-            "
+            className="h-full w-full flex flex-col overflow-hidden"
         >
-            <div className="min-w-full w-fit p-8 flex flex-col gap-6 h-full">
+            <div className="flex-1 min-h-0 w-full flex flex-col p-4 md:p-8 gap-4 md:gap-6">
                 {/* Header */}
                 <div className="w-full flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
                     <div className="flex items-center gap-2 flex-1 w-full">
@@ -450,7 +443,6 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     />
                 </div>
                 
-                {/* Canvas */}
                 <DndContext
                     sensors={sensors}
                     collisionDetection={pointerWithin}
@@ -459,7 +451,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     onDragEnd={onDragEnd}
                     onDragOver={onDragOver}
                 >
-                    <div className="flex flex-row overflow-x-auto snap-x snap-mandatory h-full md:overflow-visible md:snap-none pb-20 gap-4 px-4 md:px-0 items-start no-scrollbar">
+                    <div className="flex-1 min-h-0 flex flex-row overflow-x-auto snap-x snap-mandatory md:snap-none gap-4 px-2 md:px-0 items-start no-scrollbar pb-4">
                         <SortableContext items={columnsId} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <ColumnContainer
@@ -480,9 +472,11 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                 createNewColumn();
                             }}
                             className={cn(
-                                "h-[60px] w-[350px] min-w-[350px] cursor-pointer rounded-xl p-4 flex gap-2 items-center justify-center",
-                                "bg-white/5 border-2 border-dashed border-white/10 hover:border-gray-500",
-                                "text-gray-500 hover:text-white transition-all hover:bg-white/10"
+                                "h-[60px] min-w-[85vw] md:min-w-[350px] md:w-[350px] shrink-0 snap-center cursor-pointer rounded-xl p-4 flex gap-2 items-center justify-center",
+                                "border-2 border-dashed transition-all",
+                                isDark
+                                    ? "bg-white/5 border-white/10 hover:border-gray-500 text-gray-500 hover:text-white hover:bg-white/10"
+                                    : "bg-slate-50 border-slate-300 hover:border-slate-400 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                             )}
                         >
                             <Plus />

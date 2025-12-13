@@ -89,7 +89,7 @@ function TaskCard({ task, deleteTask, updateTask }) {
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
-        touchAction: 'manipulation',
+        touchAction: 'none',
         willChange: isDragging ? 'transform' : 'auto',
     };
 

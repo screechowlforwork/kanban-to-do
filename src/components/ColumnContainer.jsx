@@ -109,7 +109,8 @@ function ColumnContainer({
                 ref={setNodeRef}
                 style={style}
                 className={cn(
-                    "min-w-[85vw] md:min-w-[350px] md:w-[350px] h-[500px] max-h-[80vh] rounded-xl flex flex-col opacity-60",
+                    "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] rounded-xl flex flex-col opacity-60",
+                    "h-[calc(100vh-200px)] md:h-[calc(100vh-180px)] max-h-[600px]",
                     "border-2 border-dashed border-gray-600 bg-black/20"
                 )}
             ></div>
@@ -121,21 +122,23 @@ function ColumnContainer({
             ref={setNodeRef}
             style={style}
             className={cn(
-                "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] snap-center shrink-0 h-[500px] max-h-[80vh] rounded-xl flex flex-col",
-                "transition-colors duration-200"
+                "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] snap-center shrink-0 flex flex-col rounded-xl",
+                "h-[calc(100vh-200px)] md:h-[calc(100vh-180px)] max-h-[600px]",
+                "transition-colors duration-200",
+                isDark ? "bg-[#0F0F12]/30" : "bg-white/50"
             )}
         >
-            {/* Column Header */}
+            {/* Column Header - Sticky */}
             <div
                 {...attributes}
                 {...listeners}
                 onClick={() => setEditMode(true)}
                 className={cn(
-                    "h-[60px] cursor-grab rounded-t-xl p-4 flex items-center justify-between",
+                    "sticky top-0 z-10 h-[60px] shrink-0 cursor-grab rounded-t-xl p-4 flex items-center justify-between",
                     "group transition-colors duration-500",
                     isDark 
-                        ? "bg-[#0F0F12]/50 backdrop-blur-sm border-b border-white/5" 
-                        : "bg-white/80 backdrop-blur-sm border-b border-slate-200"
+                        ? "bg-[#0F0F12]/90 backdrop-blur-md border-b border-white/5" 
+                        : "bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm"
                 )}
             >
                 <div className="flex gap-3 items-center">
@@ -185,11 +188,10 @@ function ColumnContainer({
             {/* Decorative Line under header (Neon Glow effect) */}
             <div className={cn("h-[2px] w-full mt-1", theme.borderColor.replace('border-', 'bg-'), theme.glow)}></div>
 
-            {/* Column Task Container */}
+            {/* Column Task Container - Independent Scroll */}
             <div className={cn(
-                "flex flex-grow flex-col gap-4 p-3 overflow-x-hidden overflow-y-auto",
-                 "scrollbar-hide hover:scrollbar-default" // Helper classes if available or custom css
-                 // We added custom scrollbar in global css so it should be fine
+                "flex-1 min-h-0 flex flex-col gap-4 p-3 overflow-y-auto overflow-x-hidden",
+                "scrollbar-hide hover:scrollbar-default"
             )}>
                 <SortableContext items={tasksIds} strategy={verticalListSortingStrategy}>
                     {tasks.map((task) => (
