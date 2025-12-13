@@ -188,10 +188,16 @@ function ColumnContainer({
             <div className={cn("h-[2px] w-full mt-1", theme.borderColor.replace('border-', 'bg-'), theme.glow)}></div>
 
             {/* Column Task Container - Independent Scroll */}
-            <div className={cn(
-                "flex-1 min-h-0 flex flex-col gap-4 p-3 overflow-y-auto overflow-x-hidden",
-                "scrollbar-hide hover:scrollbar-default"
-            )}>
+            <div 
+                className={cn(
+                    "flex-1 min-h-0 flex flex-col gap-4 p-3 overflow-y-auto overflow-x-hidden",
+                    "scrollbar-hide hover:scrollbar-default"
+                )}
+                style={{
+                    overscrollBehaviorY: "contain",
+                    touchAction: "pan-y"
+                }}
+            >
                 <SortableContext items={tasksIds} strategy={verticalListSortingStrategy}>
                     {tasks.map((task) => (
                         <TaskCard

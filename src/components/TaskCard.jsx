@@ -52,7 +52,7 @@ const PRIORITY_STYLES_LIGHT = {
 };
 
 
-function TaskCard({ task, deleteTask, updateTask }) {
+function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
     const { themeConfig, isDark } = useTheme();
     const [mouseIsOver, setMouseIsOver] = useState(false);
     const [editMode, setEditMode] = useState(false);
@@ -105,16 +105,8 @@ function TaskCard({ task, deleteTask, updateTask }) {
             <div
                 ref={setNodeRef}
                 style={style}
-                className={cn(
-                    "relative flex flex-col p-4 w-full min-h-[120px] rounded-xl cursor-grab",
-                    "bg-[#1A1A1E] border-2 border-neon-purple/50",
-                    "opacity-50"
-                )}
-            >
-                <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-semibold text-gray-200 truncate">{task.title}</h3>
-                </div>
-            </div>
+                className="w-full min-h-[120px] rounded-xl opacity-0 border-2 border-dashed border-gray-500/20"
+            />
         );
     }
 
@@ -199,7 +191,7 @@ function TaskCard({ task, deleteTask, updateTask }) {
             className={cn(
                 "group relative flex flex-col p-4 w-full min-h-[120px] rounded-xl cursor-grab",
                 "transition-transform duration-200 ease-out",
-                "active:scale-[0.98]",
+                isOverlay ? "cursor-grabbing scale-105 shadow-2xl rotate-2 z-50" : "active:scale-[0.98]",
                 isDark 
                     ? "bg-[#1A1A1E] border border-white/10" 
                     : "bg-white border border-slate-200 shadow-sm",

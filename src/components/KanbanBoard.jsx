@@ -533,19 +533,12 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                 />
                             )}
                             {activeTask && (
-                                <div 
-                                    className="rotate-2 scale-105"
-                                    style={{
-                                        boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                                        pointerEvents: 'none',
-                                    }}
-                                >
-                                    <TaskCard
-                                        task={activeTask}
-                                        deleteTask={deleteTask}
-                                        updateTask={updateTask}
-                                    />
-                                </div>
+                                <TaskCard
+                                    task={activeTask}
+                                    deleteTask={deleteTask}
+                                    updateTask={updateTask}
+                                    isOverlay={true}
+                                />
                             )}
                         </DragOverlay>,
                         document.body
