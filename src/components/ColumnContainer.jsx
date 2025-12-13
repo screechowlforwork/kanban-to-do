@@ -110,7 +110,7 @@ function ColumnContainer({
                 style={style}
                 className={cn(
                     "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] rounded-xl flex flex-col opacity-60",
-                    "h-[calc(100vh-200px)] md:h-[calc(100vh-180px)] max-h-[600px]",
+                    "h-full max-h-full",
                     "border-2 border-dashed border-gray-600 bg-black/20"
                 )}
             ></div>
@@ -123,7 +123,7 @@ function ColumnContainer({
             style={style}
             className={cn(
                 "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] snap-center shrink-0 flex flex-col rounded-xl",
-                "h-[calc(100vh-200px)] md:h-[calc(100vh-180px)] max-h-[600px]",
+                "h-full max-h-full",
                 "transition-colors duration-200",
                 isDark ? "bg-[#0F0F12]/30" : "bg-white/50"
             )}

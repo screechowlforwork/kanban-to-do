@@ -65,7 +65,9 @@ function AppContent() {
 
     return (
         <div className={cn(
-            "flex h-screen w-full overflow-hidden transition-colors duration-500 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]",
+            "flex w-full overflow-hidden transition-colors duration-500",
+            "h-[100dvh] min-h-[100dvh]",
+            "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]",
             themeConfig.background,
             themeConfig.textPrimary,
             theme === "gradient" && "animate-gradient-slow"
@@ -83,7 +85,7 @@ function AppContent() {
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
             />
-            <main className="flex-1 h-full overflow-hidden relative">
+            <main className="flex-1 w-full h-full overflow-hidden relative z-0">
                 <KanbanBoard 
                     key={activeProjectId} 
                     projectId={activeProjectId} 

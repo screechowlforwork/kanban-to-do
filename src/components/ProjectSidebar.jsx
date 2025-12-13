@@ -97,11 +97,14 @@ function ProjectSidebar({ projects, activeProjectId, onSelectProject, onCreatePr
                 />
             )}
             <div className={cn(
-                "fixed inset-y-0 left-0 h-screen z-50 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
-                "w-[260px] md:w-[260px] md:static md:translate-x-0 shadow-2xl md:shadow-none",
-                isOpen ? "translate-x-0" : "-translate-x-full",
+                "fixed inset-y-0 left-0 z-50 flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+                "w-[280px] h-[100dvh]",
+                "md:relative md:h-full md:translate-x-0 md:z-0",
+                isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+                "shadow-2xl md:shadow-none",
                 themeConfig.sidebarBg,
-                themeConfig.borderColor
+                themeConfig.borderColor,
+                "border-r"
             )}>
             <div className={cn("p-6 flex items-center gap-3", themeConfig.borderColor, "border-b")}>
                 <div className={cn(
@@ -280,7 +283,7 @@ function ProjectSidebar({ projects, activeProjectId, onSelectProject, onCreatePr
                     >
                          <h3 className="text-xl font-bold mb-2">Delete Project?</h3>
                          <p className={cn("text-sm mb-6", isDark ? "text-gray-400" : "text-slate-500")}>
-                            Are you sure you want to delete <span className="font-bold">"{deletingProject.name}"</span>?
+                            Are you sure you want to delete <span className="font-bold">&ldquo;{deletingProject.name}&rdquo;</span>?
                             This action cannot be undone.
                          </p>
                          <div className="flex gap-3 justify-end">

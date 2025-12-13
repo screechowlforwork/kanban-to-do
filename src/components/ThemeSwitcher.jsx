@@ -13,7 +13,8 @@ function ThemeSwitcher() {
 
     return (
         <div className={cn(
-            "fixed bottom-6 right-6 z-50",
+            "fixed z-50",
+            "bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-[calc(1.5rem+env(safe-area-inset-right))]",
             "flex items-center gap-1 p-1.5 rounded-full",
             "backdrop-blur-xl shadow-lg",
             themeConfig.isDark 

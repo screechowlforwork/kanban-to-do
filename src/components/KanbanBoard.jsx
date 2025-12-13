@@ -451,7 +451,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     onDragEnd={onDragEnd}
                     onDragOver={onDragOver}
                 >
-                    <div className="flex-1 min-h-0 flex flex-row overflow-x-auto snap-x snap-mandatory md:snap-none gap-4 px-2 md:px-0 items-start no-scrollbar pb-4">
+                    <div className="flex-1 min-h-0 flex flex-row overflow-x-auto overflow-y-hidden snap-x snap-mandatory md:snap-none gap-4 px-2 md:px-0 items-stretch no-scrollbar">
                         <SortableContext items={columnsId} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <ColumnContainer
@@ -472,7 +472,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                 createNewColumn();
                             }}
                             className={cn(
-                                "h-[60px] min-w-[85vw] md:min-w-[350px] md:w-[350px] shrink-0 snap-center cursor-pointer rounded-xl p-4 flex gap-2 items-center justify-center",
+                                "h-[60px] min-w-[85vw] md:min-w-[350px] md:w-[350px] shrink-0 snap-center cursor-pointer rounded-xl p-4 flex gap-2 items-center justify-center self-start",
                                 "border-2 border-dashed transition-all",
                                 isDark
                                     ? "bg-white/5 border-white/10 hover:border-gray-500 text-gray-500 hover:text-white hover:bg-white/10"
