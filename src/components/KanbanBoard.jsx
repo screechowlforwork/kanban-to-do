@@ -7,7 +7,7 @@ import {
     TouchSensor,
     useSensor,
     useSensors,
-    closestCorners,
+    pointerWithin,
     MeasuringStrategy,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
@@ -348,6 +348,21 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
 
         if (activeId === overId) return;
 
+        const isActiveTask = active.data.current?.type === "Task";
+        const isOverTask = over.data.current?.type === "Task";
+
+        // Task Sorting (Same Column) - Finalize order here
+        if (isActiveTask && isOverTask && activeId !== overId) {
+            setTasks((tasks) => {
+                const activeIndex = tasks.findIndex((t) => t.id === activeId);
+                const overIndex = tasks.findIndex((t) => t.id === overId);
+                if (activeIndex !== -1 && overIndex !== -1 && tasks[activeIndex].columnId === tasks[overIndex].columnId) {
+                    return arrayMove(tasks, activeIndex, overIndex);
+                }
+                return tasks;
+            });
+        }
+
         const isActiveColumn = active.data.current?.type === "Column";
         if (!isActiveColumn) return;
 
@@ -398,7 +413,8 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     return arrayMove(newTasks, activeIndex, overIndex - 1);
                 }
 
-                return arrayMove(tasks, activeIndex, overIndex);
+                // Skip re-rendering for same-column moves during drag (handled visually by dnd-kit, committed onDragEnd)
+                return tasks; 
             });
         }
 
@@ -459,13 +475,13 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                 
                 <DndContext
                     sensors={sensors}
-                    collisionDetection={closestCorners}
+                    collisionDetection={pointerWithin}
                     measuring={measuringConfig}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDragOver={onDragOver}
                 >
-                    <div className="flex-1 min-h-0 flex flex-row overflow-x-auto overflow-y-hidden snap-x snap-mandatory md:snap-none gap-4 px-2 md:px-0 items-stretch no-scrollbar">
+                    <div className="flex-1 min-h-0 flex flex-row overflow-x-auto overflow-y-hidden gap-4 px-2 md:px-0 items-stretch no-scrollbar">
                         <SortableContext items={columnsId} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <ColumnContainer

@@ -215,10 +215,17 @@ function TaskCard({ task, deleteTask, updateTask }) {
             <div className="flex justify-between items-start mb-3 pl-2">
                 <h3 className={cn(
                     "font-medium leading-snug pr-6 text-base md:text-sm",
-                    "overflow-hidden text-ellipsis",
-                    "line-clamp-2",
+                    "break-words whitespace-normal",
                     themeConfig.textPrimary
-                )}>
+                )}
+                style={{
+                    maxHeight: '3rem', // Line height 1.5 * 2 lines
+                    overflow: 'hidden',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                }}
+                >
                     {task.title}
                 </h3>
                 {task.priority && (
