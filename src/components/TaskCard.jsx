@@ -89,6 +89,8 @@ function TaskCard({ task, deleteTask, updateTask }) {
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
+        touchAction: 'manipulation',
+        willChange: isDragging ? 'transform' : 'auto',
     };
 
     const toggleEditMode = () => {

@@ -3,9 +3,12 @@ import { Plus, Menu } from "lucide-react";
 import {
     DndContext,
     DragOverlay,
-    PointerSensor,
+    MouseSensor,
+    TouchSensor,
     useSensor,
     useSensors,
+    pointerWithin,
+    MeasuringStrategy,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
@@ -175,12 +178,25 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
     const [activeTask, setActiveTask] = useState(null);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, {
+        useSensor(MouseSensor, {
             activationConstraint: {
-                distance: 10,
+                distance: 8,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 150,
+                tolerance: 8,
             },
         })
     );
+
+    // Measuring configuration for smoother drag calculations
+    const measuringConfig = {
+        droppable: {
+            strategy: MeasuringStrategy.Always,
+        },
+    };
     
     // Track if we should fire confetti (set in onDragOver, fired in onDragEnd)
     const shouldFireConfetti = useRef(false);
@@ -437,6 +453,8 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                 {/* Canvas */}
                 <DndContext
                     sensors={sensors}
+                    collisionDetection={pointerWithin}
+                    measuring={measuringConfig}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDragOver={onDragOver}
@@ -473,7 +491,15 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     </div>
 
                     {createPortal(
-                        <DragOverlay>
+                        <DragOverlay
+                            dropAnimation={{
+                                duration: 300,
+                                easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+                            }}
+                            style={{
+                                cursor: 'grabbing',
+                            }}
+                        >
                             {activeColumn && (
                                 <ColumnContainer
                                     column={activeColumn}
@@ -486,7 +512,13 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                 />
                             )}
                             {activeTask && (
-                                <div className="rotate-3 scale-105 cursor-grabbing z-50">
+                                <div 
+                                    className="rotate-3 scale-105 opacity-95"
+                                    style={{
+                                        filter: 'drop-shadow(0 25px 25px rgba(0,0,0,0.5))',
+                                        willChange: 'transform',
+                                    }}
+                                >
                                     <TaskCard
                                         task={activeTask}
                                         deleteTask={deleteTask}

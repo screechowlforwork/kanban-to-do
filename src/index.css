@@ -83,3 +83,32 @@ html, body {
         background-size: 400% 400%;
     }
 }
+
+/* Touch optimization for draggable elements */
+[data-dragging="true"] {
+    z-index: 9999 !important;
+    pointer-events: none;
+}
+
+/* Smooth cursor transitions */
+.cursor-grab {
+    cursor: grab;
+}
+
+.cursor-grab:active {
+    cursor: grabbing;
+}
+
+/* Active drag state visual feedback */
+@media (pointer: coarse) {
+    /* Touch devices: increase hit areas */
+    .cursor-grab {
+        min-height: 48px;
+    }
+    
+    /* Prevent text selection during drag */
+    .cursor-grab {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+}
