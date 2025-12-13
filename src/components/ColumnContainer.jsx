@@ -123,9 +123,8 @@ function ColumnContainer({
             style={style}
             className={cn(
                 "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] snap-center shrink-0 flex flex-col rounded-xl",
-                "h-full max-h-full",
-                "transition-colors duration-200",
-                isDark ? "bg-[#0F0F12]/30" : "bg-white/50"
+                "h-full max-h-full overflow-hidden",
+                isDark ? "bg-[#0F0F12]" : "bg-white/80"
             )}
         >
             {/* Column Header - Sticky */}
@@ -135,10 +134,10 @@ function ColumnContainer({
                 onClick={() => setEditMode(true)}
                 className={cn(
                     "sticky top-0 z-10 h-[60px] shrink-0 cursor-grab rounded-t-xl p-4 flex items-center justify-between",
-                    "group transition-colors duration-500",
+                    "group",
                     isDark 
-                        ? "bg-[#0F0F12]/90 backdrop-blur-md border-b border-white/5" 
-                        : "bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm"
+                        ? "bg-[#0F0F12] border-b border-white/10" 
+                        : "bg-white border-b border-slate-200"
                 )}
             >
                 <div className="flex gap-3 items-center">

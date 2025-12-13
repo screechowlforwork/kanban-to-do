@@ -487,11 +487,8 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     {createPortal(
                         <DragOverlay
                             dropAnimation={{
-                                duration: 300,
-                                easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-                            }}
-                            style={{
-                                cursor: 'grabbing',
+                                duration: 200,
+                                easing: 'ease-out',
                             }}
                         >
                             {activeColumn && (
@@ -507,10 +504,9 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                             )}
                             {activeTask && (
                                 <div 
-                                    className="rotate-3 scale-105 opacity-95"
+                                    className="rotate-2 scale-105"
                                     style={{
-                                        filter: 'drop-shadow(0 25px 25px rgba(0,0,0,0.5))',
-                                        willChange: 'transform',
+                                        boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
                                     }}
                                 >
                                     <TaskCard

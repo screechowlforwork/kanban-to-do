@@ -87,10 +87,10 @@ function TaskCard({ task, deleteTask, updateTask }) {
     });
 
     const style = {
-        transition,
+        transition: transition || undefined,
         transform: CSS.Transform.toString(transform),
         touchAction: 'none',
-        willChange: isDragging ? 'transform' : 'auto',
+        WebkitTransform: CSS.Transform.toString(transform),
     };
 
     const toggleEditMode = () => {
@@ -108,12 +108,12 @@ function TaskCard({ task, deleteTask, updateTask }) {
                 style={style}
                 className={cn(
                     "relative flex flex-col p-4 w-full min-h-[120px] rounded-xl cursor-grab",
-                    "bg-[#1A1A1E]/80 backdrop-blur-xl border border-white/10",
-                    "shadow-2xl rotate-2 scale-105 z-50 ring-2 ring-neon-purple/50"
+                    "bg-[#1A1A1E] border-2 border-neon-purple/50",
+                    "opacity-50"
                 )}
             >
                 <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-semibold text-gray-200">{task.title}</h3>
+                    <h3 className="font-semibold text-gray-200 truncate">{task.title}</h3>
                 </div>
             </div>
         );
@@ -199,22 +199,27 @@ function TaskCard({ task, deleteTask, updateTask }) {
             }}
             className={cn(
                 "group relative flex flex-col p-4 w-full min-h-[120px] rounded-xl cursor-grab",
-                "transition-all duration-300 ease-out",
-                "hover:-translate-y-1 hover:scale-[1.02]",
+                "transition-transform duration-200 ease-out",
+                "active:scale-[0.98]",
                 isDark 
-                    ? "bg-white/5 backdrop-blur-md border border-white/5" 
+                    ? "bg-[#1A1A1E] border border-white/10" 
                     : "bg-white border border-slate-200 shadow-sm",
                 pStyle.glow,
                 flash && (isDark 
-                    ? "animate-pulse ring-2 ring-neon-green shadow-[0_0_30px_rgba(50,255,150,0.5)] bg-neon-green/10"
-                    : "animate-pulse ring-2 ring-green-400 shadow-lg bg-green-50")
+                    ? "ring-2 ring-neon-green bg-neon-green/10"
+                    : "ring-2 ring-green-400 bg-green-50")
             )}
         >
             {/* Priority Line */}
             <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-colors", pStyle.line)} />
 
             <div className="flex justify-between items-start mb-3 pl-2">
-                <h3 className={cn("font-medium leading-snug pr-6 text-base md:text-sm break-words whitespace-normal", themeConfig.textPrimary)}>
+                <h3 className={cn(
+                    "font-medium leading-snug pr-6 text-base md:text-sm",
+                    "overflow-hidden text-ellipsis",
+                    "line-clamp-2",
+                    themeConfig.textPrimary
+                )}>
                     {task.title}
                 </h3>
                 {task.priority && (

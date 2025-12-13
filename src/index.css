@@ -112,3 +112,57 @@ html, body {
         -webkit-user-select: none;
     }
 }
+
+/* ===== SAFARI-SPECIFIC FIXES ===== */
+
+/* Force GPU acceleration for transforms */
+.snap-center {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Fix Safari scrolling performance */
+.overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix text rendering in Safari */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Prevent Safari from creating stacking context issues */
+.rounded-xl {
+    -webkit-transform: translate3d(0, 0, 0);
+}
+
+/* Fix Safari sticky positioning */
+.sticky {
+    position: -webkit-sticky;
+    position: sticky;
+}
+
+/* Reduce repaints on mobile Safari */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Safari specific */
+    .transition-transform {
+        transition: transform 0.2s ease-out;
+        -webkit-transition: -webkit-transform 0.2s ease-out;
+    }
+    
+    /* Disable complex animations on iOS */
+    .animate-pulse {
+        animation: none;
+    }
+    
+    /* Force hardware acceleration */
+    .cursor-grab {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+}
