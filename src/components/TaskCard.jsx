@@ -189,7 +189,7 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
                 setIsDeleting(false);
             }}
             className={cn(
-                "group relative flex flex-col p-4 w-full min-h-[120px] rounded-xl cursor-grab",
+                "group relative flex flex-col p-4 w-full min-h-[120px] rounded-xl cursor-grab overflow-hidden",
                 "transition-transform duration-200 ease-out",
                 isOverlay ? "cursor-grabbing scale-105 shadow-2xl rotate-2 z-50" : "active:scale-[0.98]",
                 isDark 
@@ -204,25 +204,17 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
             {/* Priority Line */}
             <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-colors", pStyle.line)} />
 
-            <div className="flex justify-between items-start mb-3 pl-2">
+            <div className="flex justify-between items-start mb-3 pl-2 min-w-0">
                 <h3 className={cn(
                     "font-medium leading-snug pr-6 text-base md:text-sm",
-                    "break-words whitespace-normal",
+                    "w-full min-w-0 break-words whitespace-normal line-clamp-2",
                     themeConfig.textPrimary
-                )}
-                style={{
-                    maxHeight: '3rem', // Line height 1.5 * 2 lines
-                    overflow: 'hidden',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                }}
-                >
+                )}>
                     {task.title}
                 </h3>
                 {task.priority && (
                     <span className={cn(
-                        "text-[11px] px-2 py-1 rounded-full font-medium border uppercase tracking-wider",
+                        "text-[11px] px-2 py-1 rounded-full font-medium border uppercase tracking-wider shrink-0",
                         pStyle.badge
                     )}>
                         {task.priority}
@@ -230,8 +222,12 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
                 )}
             </div>
 
-            <div className="pl-2 mt-auto">
-                 <p className={cn("text-sm line-clamp-3 leading-relaxed font-light whitespace-pre-wrap break-words", themeConfig.textSecondary)}>
+            <div className="flex-1 w-full min-w-0 pl-2 mt-auto">
+                <p className={cn(
+                    "text-sm leading-relaxed font-light",
+                    "w-full min-w-0 break-words whitespace-pre-wrap line-clamp-3",
+                    themeConfig.textSecondary
+                )}>
                     {task.content}
                 </p>
             </div>
