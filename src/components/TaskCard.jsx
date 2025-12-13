@@ -87,10 +87,9 @@ function TaskCard({ task, deleteTask, updateTask }) {
     });
 
     const style = {
-        transition: transition || undefined,
-        transform: CSS.Transform.toString(transform),
+        transition,
+        transform: CSS.Translate.toString(transform),
         touchAction: 'none',
-        WebkitTransform: CSS.Transform.toString(transform),
     };
 
     const toggleEditMode = () => {

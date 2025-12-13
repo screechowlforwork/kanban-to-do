@@ -249,6 +249,20 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
         );
     }, [tasks, searchQuery]);
 
+    const tasksByColumn = useMemo(() => {
+        const groups = {};
+        columns.forEach(col => { groups[col.id] = []; });
+        filteredTasks.forEach(task => {
+            if (groups[task.columnId]) {
+                groups[task.columnId].push(task);
+            } else {
+                // Handle tasks that might belong to deleted columns or initial state quirks
+                // by skipping them or putting them in a default
+            }
+        });
+        return groups;
+    }, [filteredTasks, columns]);
+
     function createTask(columnId) {
         const newTask = {
             id: uuidv4(),
@@ -462,7 +476,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                     createTask={createTask}
                                     deleteTask={deleteTask}
                                     updateTask={updateTask}
-                                    tasks={filteredTasks.filter((task) => task.columnId === col.id)}
+                                    tasks={tasksByColumn[col.id] || []}
                                 />
                             ))}
                         </SortableContext>
@@ -499,7 +513,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                     createTask={createTask}
                                     deleteTask={deleteTask}
                                     updateTask={updateTask}
-                                    tasks={tasks.filter((task) => task.columnId === activeColumn.id)}
+                                    tasks={tasksByColumn[activeColumn.id] || []}
                                 />
                             )}
                             {activeTask && (
@@ -507,6 +521,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                     className="rotate-2 scale-105"
                                     style={{
                                         boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                                        pointerEvents: 'none',
                                     }}
                                 >
                                     <TaskCard
