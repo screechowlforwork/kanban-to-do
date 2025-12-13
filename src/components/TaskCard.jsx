@@ -212,7 +212,7 @@ function TaskCard({ task, deleteTask, updateTask }) {
             <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-colors", pStyle.line)} />
 
             <div className="flex justify-between items-start mb-3 pl-2">
-                <h3 className={cn("font-medium leading-snug pr-6 text-base md:text-sm", themeConfig.textPrimary)}>
+                <h3 className={cn("font-medium leading-snug pr-6 text-base md:text-sm break-words whitespace-normal", themeConfig.textPrimary)}>
                     {task.title}
                 </h3>
                 {task.priority && (
@@ -226,7 +226,7 @@ function TaskCard({ task, deleteTask, updateTask }) {
             </div>
 
             <div className="pl-2 mt-auto">
-                 <p className={cn("text-sm line-clamp-3 leading-relaxed font-light whitespace-pre-wrap", themeConfig.textSecondary)}>
+                 <p className={cn("text-sm line-clamp-3 leading-relaxed font-light whitespace-pre-wrap break-words", themeConfig.textSecondary)}>
                     {task.content}
                 </p>
             </div>

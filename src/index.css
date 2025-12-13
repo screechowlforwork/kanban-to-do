@@ -67,6 +67,13 @@ html, body {
 }
 
 @layer utilities {
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
     .glass-panel {
         @apply bg-cardbg backdrop-blur-[12px] border border-white/5 shadow-glass;
     }

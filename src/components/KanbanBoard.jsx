@@ -441,7 +441,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     onDragEnd={onDragEnd}
                     onDragOver={onDragOver}
                 >
-                    <div className="flex flex-row overflow-x-auto snap-x snap-mandatory h-full md:overflow-visible md:snap-none pb-4 gap-4 px-4 md:px-0 items-start scrollbar-hide">
+                    <div className="flex flex-row overflow-x-auto snap-x snap-mandatory h-full md:overflow-visible md:snap-none pb-20 gap-4 px-4 md:px-0 items-start no-scrollbar">
                         <SortableContext items={columnsId} strategy={horizontalListSortingStrategy}>
                             {columns.map((col) => (
                                 <ColumnContainer

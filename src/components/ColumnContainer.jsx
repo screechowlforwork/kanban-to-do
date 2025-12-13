@@ -121,7 +121,7 @@ function ColumnContainer({
             ref={setNodeRef}
             style={style}
             className={cn(
-                "min-w-[85vw] md:min-w-[350px] md:w-[350px] snap-center shrink-0 h-[500px] max-h-[80vh] rounded-xl flex flex-col",
+                "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] snap-center shrink-0 h-[500px] max-h-[80vh] rounded-xl flex flex-col",
                 "transition-colors duration-200"
             )}
         >
