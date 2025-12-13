@@ -7,7 +7,7 @@ import {
     TouchSensor,
     useSensor,
     useSensors,
-    pointerWithin,
+    closestCorners,
     MeasuringStrategy,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
@@ -445,7 +445,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                 
                 <DndContext
                     sensors={sensors}
-                    collisionDetection={pointerWithin}
+                    collisionDetection={closestCorners}
                     measuring={measuringConfig}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}

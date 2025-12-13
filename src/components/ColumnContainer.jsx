@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useMemo, useState } from "react";
+import { useMemo, useState, memo } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import TaskCard from "./TaskCard";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -238,4 +238,4 @@ function ColumnContainer({
     );
 }
 
-export default ColumnContainer;
+export default memo(ColumnContainer);

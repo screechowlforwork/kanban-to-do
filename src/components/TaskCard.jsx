@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Trash2, CheckCircle } from "lucide-react";
@@ -286,4 +286,4 @@ function TaskCard({ task, deleteTask, updateTask }) {
     );
 }
 
-export default TaskCard;
+export default memo(TaskCard);
