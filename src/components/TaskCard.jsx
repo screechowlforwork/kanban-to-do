@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Trash2, CheckCircle } from "lucide-react";
+import { Trash2, CheckCircle, Pencil } from "lucide-react";
 import { cn } from "../utils";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -54,8 +54,8 @@ const PRIORITY_STYLES_LIGHT = {
 
 function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
     const { themeConfig, isDark } = useTheme();
-    const [mouseIsOver, setMouseIsOver] = useState(false);
     const [editMode, setEditMode] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [flash, setFlash] = useState(false);
     const prevColumnId = useRef(task.columnId);
@@ -94,7 +94,13 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
 
     const toggleEditMode = () => {
         setEditMode((prev) => !prev);
-        setMouseIsOver(false);
+        setIsExpanded(false);
+    };
+
+    const handleCardClick = (e) => {
+        // Don't toggle if clicking on buttons
+        if (e.target.closest('button')) return;
+        setIsExpanded((prev) => !prev);
     };
 
     const PRIORITY_STYLES = isDark ? PRIORITY_STYLES_DARK : PRIORITY_STYLES_LIGHT;
@@ -182,15 +188,12 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
             style={style}
             {...attributes}
             {...listeners}
-            onClick={toggleEditMode}
-            onMouseEnter={() => setMouseIsOver(true)}
-            onMouseLeave={() => {
-                setMouseIsOver(false);
-                setIsDeleting(false);
-            }}
+            onClick={handleCardClick}
+            onMouseLeave={() => setIsDeleting(false)}
             className={cn(
-                "group relative flex flex-col p-4 w-full min-h-[120px] rounded-xl cursor-grab overflow-hidden",
-                "transition-transform duration-200 ease-out",
+                "group relative flex flex-col p-4 w-full rounded-xl cursor-grab overflow-hidden",
+                isExpanded ? "min-h-[200px]" : "min-h-[140px]",
+                "transition-all duration-200 ease-out",
                 isOverlay ? "cursor-grabbing scale-105 shadow-2xl rotate-2 z-50" : "active:scale-[0.98]",
                 isDark 
                     ? "bg-[#1A1A1E] border border-white/10" 
@@ -230,53 +233,79 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
             <div className="flex-1 min-w-0 pl-2 mt-auto">
                 <p className={cn(
                     "text-sm leading-relaxed font-light",
-                    "break-words whitespace-pre-wrap line-clamp-3",
+                    "break-words whitespace-pre-wrap",
+                    isExpanded ? "" : "line-clamp-4",
                     themeConfig.textSecondary
                 )}>
                     {task.content}
                 </p>
             </div>
 
-            {/* Actions */}
-            {mouseIsOver && (
-                <div className="absolute right-2 top-2 z-10 fade-in zoom-in duration-200">
-                    {isDeleting ? (
-                       <div className="flex gap-2 p-1 bg-black/50 rounded-lg backdrop-blur-sm border border-red-500/30">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTask(task.id);
-                                }}
-                                onPointerDown={(e) => e.stopPropagation()}
-                                className="text-red-400 hover:text-white text-xs font-bold px-2"
-                            >
-                                Delete
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsDeleting(false);
-                                }}
-                                onPointerDown={(e) => e.stopPropagation()}
-                                className="text-gray-400 hover:text-white text-xs px-2"
-                            >
-                                Cancel
-                            </button>
-                       </div> 
-                    ) : (
+            {/* Actions - Always visible on touch devices */}
+            <div className={cn(
+                "absolute right-2 top-2 z-10 flex gap-1",
+                "opacity-0 group-hover:opacity-100 transition-opacity",
+                "md:opacity-0"
+            )}>
+                {!isDeleting && (
+                    <>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleEditMode();
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className={cn(
+                                "p-2 rounded-lg transition-colors",
+                                isDark 
+                                    ? "bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white" 
+                                    : "bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700"
+                            )}
+                        >
+                            <Pencil size={14} />
+                        </button>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setIsDeleting(true);
                             }}
                             onPointerDown={(e) => e.stopPropagation()}
-                            className="p-2 rounded-md text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors"
+                            className={cn(
+                                "p-2 rounded-lg transition-colors",
+                                isDark 
+                                    ? "bg-white/10 hover:bg-red-500/20 text-gray-300 hover:text-red-400" 
+                                    : "bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-500"
+                            )}
                         >
-                            <Trash2 size={16} />
+                            <Trash2 size={14} />
                         </button>
-                    )}
-                </div>
-            )}
+                    </>
+                )}
+                {isDeleting && (
+                    <div className="flex gap-2 p-1 bg-black/50 rounded-lg backdrop-blur-sm border border-red-500/30">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                deleteTask(task.id);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className="text-red-400 hover:text-white text-xs font-bold px-2"
+                        >
+                            Delete
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsDeleting(false);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className="text-gray-400 hover:text-white text-xs px-2"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
+            </div>
             
             {/* Completion Feedback Overlay */}
             {flash && (
