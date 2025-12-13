@@ -1,102 +1,120 @@
-import { useState, useEffect } from "react";
-import KanbanBoard from './components/KanbanBoard'
-import ProjectSidebar from './components/ProjectSidebar'
-import ThemeSwitcher from './components/ThemeSwitcher'
-import { ThemeProvider, useTheme } from './contexts/ThemeContext'
-import { v4 as uuidv4 } from "uuid";
-import { safeJSONParse, cn } from "./utils";
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import KanbanBoard from './components/KanbanBoard';
+import ProjectSidebar from './components/ProjectSidebar';
+import ThemeSwitcher from './components/ThemeSwitcher';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { useProjects, useAppShortcuts } from './hooks';
+import { cn } from './utils';
 
-const DEFAULT_PROJECTS = [
-    { id: "default", name: "Default Project" }
-];
-
+/**
+ * Main App Content with all providers applied
+ */
 function AppContent() {
     const { themeConfig, theme } = useTheme();
-    
-    const [projects, setProjects] = useState(() => {
-        const parsed = safeJSONParse("kanban-projects", DEFAULT_PROJECTS);
-        return Array.isArray(parsed) ? parsed : DEFAULT_PROJECTS;
-    });
-
-    const [activeProjectId, setActiveProjectId] = useState(() => {
-        const saved = localStorage.getItem("kanban-active-project");
-        // Ensure active project exists
-        const projectExists = projects?.find(p => p.id === saved);
-        return projectExists ? saved : projects?.[0]?.id || "default";
-    });
-
-    useEffect(() => {
-        localStorage.setItem("kanban-projects", JSON.stringify(projects));
-    }, [projects]);
-
-    useEffect(() => {
-        localStorage.setItem("kanban-active-project", activeProjectId);
-    }, [activeProjectId]);
-
-    const handleCreateProject = (name) => {
-        const newProject = {
-            id: uuidv4(),
-            name
-        };
-        setProjects([...projects, newProject]);
-        setActiveProjectId(newProject.id);
-    };
-
-    const handleDeleteProject = (id) => {
-        const newProjects = projects.filter(p => p.id !== id);
-        setProjects(newProjects);
-        if (activeProjectId === id) {
-            setActiveProjectId(newProjects[0]?.id || "");
-        }
-        // Optional: Clean up localStorage for that project
-        localStorage.removeItem(`kanban-columns-${id}`);
-        localStorage.removeItem(`kanban-tasks-${id}`);
-    };
-
-    const handleRenameProject = (id, newName) => {
-        const newProjects = projects.map(p => {
-            if (p.id === id) return { ...p, name: newName };
-            return p;
-        });
-        setProjects(newProjects);
-    };
-
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+    // Use projects hook for all project management
+    const {
+        projects,
+        activeProjectId,
+        createProject,
+        deleteProject,
+        renameProject,
+        selectProject,
+    } = useProjects();
+
+    // Global keyboard shortcuts
+    useAppShortcuts({
+        onToggleSidebar: () => setIsSidebarOpen(prev => !prev),
+        onEscape: () => setIsSidebarOpen(false),
+    });
+
+    const handleSelectProject = (id) => {
+        selectProject(id);
+        setIsSidebarOpen(false);
+    };
+
+    // Get inline gradient style for gradient theme
+    const getGradientStyle = () => {
+        if (theme !== 'gradient') return {};
+        // Apply gradient directly via inline style to avoid Tailwind conflicts
+        const hour = new Date().getHours();
+        let gradient;
+        if (hour >= 5 && hour < 10) {
+            gradient = 'linear-gradient(to bottom right, #a5b4fc, #c4b5fd, #f9a8d4)'; // morning
+        } else if (hour >= 10 && hour < 16) {
+            gradient = 'linear-gradient(to bottom right, #67e8f9, #93c5fd, #a5b4fc)'; // day
+        } else if (hour >= 16 && hour < 19) {
+            gradient = 'linear-gradient(to bottom right, #fb923c, #fb7185, #a855f7)'; // sunset
+        } else {
+            gradient = 'linear-gradient(to bottom right, #111827, #581c87, #5b21b6)'; // night
+        }
+        return {
+            background: gradient,
+            backgroundSize: '400% 400%',
+            animation: 'gradient-shift 15s ease infinite',
+        };
+    };
+
     return (
-        <div className={cn(
-            "flex w-full overflow-hidden transition-colors duration-500",
-            "h-[100dvh] min-h-[100dvh]",
-            "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]",
-            themeConfig.background,
-            themeConfig.textPrimary,
-            theme === "gradient" && "animate-gradient-slow"
-        )}>
+        <div
+            className={cn(
+                'flex w-full overflow-hidden transition-colors duration-500',
+                // iOS: Use 100dvh for proper viewport height on iOS Safari
+                'h-[100dvh]',
+                // iOS: Safe area padding
+                'safe-area-padding',
+                // Only apply Tailwind background for non-gradient themes
+                theme !== 'gradient' && themeConfig.background,
+                themeConfig.textPrimary
+            )}
+            style={{
+                ...getGradientStyle(),
+                // iOS: Additional fallback for height
+                minHeight: '-webkit-fill-available',
+            }}
+        >
+            {/* Sidebar */}
             <ProjectSidebar
                 projects={projects}
                 activeProjectId={activeProjectId}
-                onSelectProject={(id) => {
-                    setActiveProjectId(id);
-                    setIsSidebarOpen(false); // Close sidebar on selection (mobile)
-                }}
-                onCreateProject={handleCreateProject}
-                onDeleteProject={handleDeleteProject}
-                onRenameProject={handleRenameProject}
+                onSelectProject={handleSelectProject}
+                onCreateProject={createProject}
+                onDeleteProject={deleteProject}
+                onRenameProject={renameProject}
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
             />
+
+            {/* Main Content */}
             <main className="flex-1 w-full h-full overflow-hidden relative z-0">
-                <KanbanBoard 
-                    key={activeProjectId} 
-                    projectId={activeProjectId} 
-                    onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-                />
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeProjectId}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="w-full h-full"
+                    >
+                        <KanbanBoard
+                            projectId={activeProjectId}
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                        />
+                    </motion.div>
+                </AnimatePresence>
             </main>
+
+            {/* Theme Switcher */}
             <ThemeSwitcher />
         </div>
-    )
+    );
 }
 
+/**
+ * Root App component with providers
+ */
 function App() {
     return (
         <ThemeProvider>
@@ -105,4 +123,4 @@ function App() {
     );
 }
 
-export default App
+export default App;

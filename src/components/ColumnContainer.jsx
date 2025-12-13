@@ -1,66 +1,82 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { useMemo, useState, memo } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import TaskCard from "./TaskCard";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { cn } from "../utils";
-import { useTheme } from "../contexts/ThemeContext";
 
+import { useSortable } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { useMemo, useState, memo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Trash2, Inbox, ChevronDown, ChevronRight } from 'lucide-react';
+import TaskCard from './TaskCard';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { cn } from '../utils';
+import { useTheme } from '../contexts/ThemeContext';
+// import { staggerContainer } from '../lib/animations'; // Removed entirely
+
+// Column theme configurations
 const COLUMN_THEMES_DARK = {
     todo: {
-        borderColor: "border-gray-600",
-        textColor: "text-gray-400",
-        underline: "decoration-gray-600",
-        glow: "shadow-[0_0_15px_rgba(75,85,99,0.3)]"
+        borderColor: 'border-gray-600',
+        textColor: 'text-gray-400',
+        bgGlow: 'bg-gray-500',
+        shadowGlow: 'shadow-[0_0_15px_rgba(75,85,99,0.3)]',
+        dropBg: 'bg-gray-500/10',
     },
     doing: {
-        borderColor: "border-neon-blue",
-        textColor: "text-neon-blue",
-        underline: "decoration-neon-blue",
-        glow: "shadow-[0_0_15px_rgba(51,225,255,0.3)]"
+        borderColor: 'border-neon-blue',
+        textColor: 'text-neon-blue',
+        bgGlow: 'bg-neon-blue',
+        shadowGlow: 'shadow-[0_0_15px_rgba(51,225,255,0.3)]',
+        dropBg: 'bg-neon-blue/10',
     },
     done: {
-        borderColor: "border-neon-green",
-        textColor: "text-neon-green",
-        underline: "decoration-neon-green",
-        glow: "shadow-[0_0_15px_rgba(51,255,153,0.3)]"
+        borderColor: 'border-neon-green',
+        textColor: 'text-neon-green',
+        bgGlow: 'bg-neon-green',
+        shadowGlow: 'shadow-[0_0_15px_rgba(51,255,153,0.3)]',
+        dropBg: 'bg-neon-green/10',
     },
     default: {
-        borderColor: "border-neon-purple",
-        textColor: "text-neon-purple",
-        underline: "decoration-neon-purple",
-        glow: "shadow-[0_0_15px_rgba(184,51,255,0.3)]"
+        borderColor: 'border-neon-purple',
+        textColor: 'text-neon-purple',
+        bgGlow: 'bg-neon-purple',
+        shadowGlow: 'shadow-[0_0_15px_rgba(184,51,255,0.3)]',
+        dropBg: 'bg-neon-purple/10',
     }
 };
 
 const COLUMN_THEMES_LIGHT = {
     todo: {
-        borderColor: "border-slate-400",
-        textColor: "text-slate-600",
-        underline: "decoration-slate-400",
-        glow: ""
+        borderColor: 'border-slate-400',
+        textColor: 'text-slate-600',
+        bgGlow: 'bg-slate-400',
+        shadowGlow: '',
+        dropBg: 'bg-slate-100',
     },
     doing: {
-        borderColor: "border-blue-500",
-        textColor: "text-blue-600",
-        underline: "decoration-blue-500",
-        glow: ""
+        borderColor: 'border-blue-500',
+        textColor: 'text-blue-600',
+        bgGlow: 'bg-blue-500',
+        shadowGlow: '',
+        dropBg: 'bg-blue-50',
     },
     done: {
-        borderColor: "border-green-500",
-        textColor: "text-green-600",
-        underline: "decoration-green-500",
-        glow: ""
+        borderColor: 'border-green-500',
+        textColor: 'text-green-600',
+        bgGlow: 'bg-green-500',
+        shadowGlow: '',
+        dropBg: 'bg-green-50',
     },
     default: {
-        borderColor: "border-purple-500",
-        textColor: "text-purple-600",
-        underline: "decoration-purple-500",
-        glow: ""
+        borderColor: 'border-purple-500',
+        textColor: 'text-purple-600',
+        bgGlow: 'bg-purple-500',
+        shadowGlow: '',
+        dropBg: 'bg-purple-50',
     }
 };
 
+/**
+ * Column Container with Vertical Accordion layout for mobile
+ */
 function ColumnContainer({
     column,
     deleteColumn,
@@ -72,175 +88,347 @@ function ColumnContainer({
 }) {
     const { isDark, theme: appTheme } = useTheme();
     const [editMode, setEditMode] = useState(false);
+    
+    // Accordion state: Default open
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    
+    // Detect mobile for conditional logic
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
+    }, []);
 
-    const tasksIds = useMemo(() => {
-        return tasks.map((task) => task.id);
-    }, [tasks]);
+    const tasksIds = useMemo(() => tasks.map(task => task.id), [tasks]);
 
+    // Sortable hook for column reordering
     const {
-        setNodeRef,
+        setNodeRef: setSortableRef,
         attributes,
         listeners,
         transform,
         transition,
         isDragging,
-        isOver,
     } = useSortable({
         id: column.id,
-        data: {
-            type: "Column",
-            column,
-        },
+        data: { type: 'Column', column },
         disabled: editMode,
     });
+
+    // Separate droppable hook for task drops
+    const {
+        setNodeRef: setDroppableRef,
+        isOver,
+    } = useDroppable({
+        id: `column-drop-${column.id}`,
+        data: { type: 'Column', column },
+    });
+
+
+
+    const setNodeRef = (node) => {
+        setSortableRef(node);
+        setDroppableRef(node);
+    };
 
     const style = {
         transition,
         transform: CSS.Transform.toString(transform),
+        touchAction: 'manipulation', // Allow vertical scrolling
+        WebkitTransform: CSS.Transform.toString(transform) || 'translateZ(0)',
     };
-    
-    // Determine theme based on ID and dark/light mode
+
+    // Get theme based on column ID
     const COLUMN_THEMES = isDark ? COLUMN_THEMES_DARK : COLUMN_THEMES_LIGHT;
     const theme = COLUMN_THEMES[column.id] || COLUMN_THEMES.default;
 
+    // Haptic feedback on drop
+    useEffect(() => {
+        if (isOver && navigator.vibrate) navigator.vibrate(10);
+    }, [isOver]);
+
+    // Function to toggle accordion (Mobile only)
+    const toggleLegacy = (e) => {
+        if (!editMode && isMobile) {
+            // Prevent toggling if clicking buttons
+            if (e.target.closest('button') || e.target.closest('input')) return;
+            setIsCollapsed(!isCollapsed);
+        }
+    };
+
+    // Drag placeholder view
     if (isDragging) {
         return (
             <div
                 ref={setNodeRef}
                 style={style}
                 className={cn(
-                    "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] rounded-xl flex flex-col opacity-60",
-                    "h-full max-h-full",
-                    "border-2 border-dashed border-gray-600 bg-black/20"
+                    'w-full md:min-w-[350px] md:w-[350px] rounded-xl flex flex-col opacity-60',
+                    'h-[100px] md:h-full', // Smaller placeholder on mobile
+                    'border-2 border-dashed',
+                    isDark ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-purple-300 bg-purple-50',
+                    'mb-4 md:mb-0' // Margin for mobile vertical stack
                 )}
-            ></div>
+            />
         );
     }
+    
+    // Determine active styles for "Mailbox" drop state
+    const isMailboxActive = isCollapsed && isOver;
 
     return (
-        <div
+        <motion.div
             ref={setNodeRef}
             style={style}
+            layout
+            id={`column-${column.id}`}
+            data-column={column.id}
             className={cn(
-                "min-w-[85vw] max-w-[85vw] md:max-w-none md:min-w-[350px] md:w-[350px] snap-center shrink-0 flex flex-col rounded-xl",
-                "h-full max-h-full overflow-hidden",
-                isDark ? "bg-[#0F0F12]" : "bg-white/80"
+                // Scroll margin for navigation offset
+                'scroll-mt-32',
+                // Mobile: Full width, vertical stack with margin
+                'w-full mb-4 shrink-0 flex flex-col rounded-xl',
+                // Desktop: Fixed width, full height, no margin (gap handles it)
+                'md:mb-0 md:min-w-[350px] md:w-[350px] md:h-full md:max-h-full',
+                
+                // Height handling:
+                'transition-all duration-300',
+                
+                // Base background
+                appTheme === 'gradient' 
+                    ? 'bg-black/20 backdrop-blur-xl border border-white/10'
+                    : isDark 
+                        ? 'bg-[#0F0F12]' 
+                        : 'bg-white/90 backdrop-blur-sm shadow-sm',
+                
+                // Drop zone feedback
+                // When collapsed (Mailbox): specific feedback on Header instead (handled below)
+                // When open: global feedback
+                (!isCollapsed && isOver) && cn(
+                    'ring-2',
+                    isDark ? 'ring-neon-purple/70' : 'ring-purple-400',
+                    theme.dropBg
+                ),
+                
+                // Mailbox Active State (Collapsed Drop) - Global container tweak
+                isMailboxActive && 'scale-[1.02] shadow-lg ring-2 ring-offset-2 ring-primary/50'
             )}
         >
-            {/* Column Header - Sticky */}
+            {/* Column Header - Clickable on mobile */}
             <div
                 {...attributes}
                 {...listeners}
-                onClick={() => setEditMode(true)}
+                onClick={toggleLegacy}
                 className={cn(
-                    "sticky top-0 z-10 h-[60px] shrink-0 cursor-grab rounded-t-xl p-4 flex items-center justify-between",
-                    "group",
-                    isDark 
-                        ? "bg-[#0F0F12] border-b border-white/10" 
-                        : "bg-white border-b border-slate-200"
+                    'sticky top-0 z-10 h-[60px] shrink-0 cursor-grab rounded-t-xl p-4 flex items-center justify-between transition-colors duration-300',
+                    'group select-none',
+                    
+                    // Default Header Styles
+                    appTheme === 'gradient'
+                        ? 'bg-transparent border-b border-white/10'
+                        : isDark
+                            ? 'bg-[#0F0F12] border-b border-white/10'
+                            : 'bg-white border-b border-slate-200',
+                            
+                    // Mailbox Active Styles (Collapsed Drop)
+                    // Highlight the header strongly to invite drop
+                    isMailboxActive && cn(
+                        'rounded-xl border-b-0', // Round bottom corners too when collapsed active
+                        isDark 
+                            ? 'bg-neon-purple/20 border-neon-purple/50' 
+                            : 'bg-purple-100 border-purple-400'
+                    )
                 )}
+                style={{ touchAction: 'none' }}
             >
                 <div className="flex gap-3 items-center">
-                    <div className={cn(
-                        "flex justify-center items-center px-2 py-0.5 text-xs rounded-full font-bold",
-                        isDark ? "bg-white/5" : "bg-slate-100",
-                        theme.textColor
-                    )}>
-                        {tasks.length}
+                    {/* Mobile Only: Chevron */}
+                    <div className="md:hidden text-gray-400">
+                        {isCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                     </div>
-                    
-                    {!editMode && (
+
+                    {/* Task Count Badge */}
+                    <motion.div
+                        key={tasks.length}
+                        initial={{ scale: 1.2 }}
+                        animate={{ scale: 1 }}
+                        className={cn(
+                            'flex justify-center items-center min-w-[28px] px-2 py-0.5 text-xs rounded-full font-bold',
+                            appTheme === 'gradient' ? 'bg-white/20' : isDark ? 'bg-white/5' : 'bg-slate-100',
+                            theme.textColor
+                        )}
+                    >
+                        {tasks.length}
+                    </motion.div>
+
+                    {/* Column Title */}
+                    {!editMode ? (
                         <h2 className={cn(
-                            "font-bold text-lg tracking-wide border-b-2 border-transparent pb-0.5 transition-all",
-                            theme.textColor,
-                            // "hover:border-current"
+                            'font-semibold text-sm tracking-wide uppercase',
+                            theme.textColor
                         )}>
                             {column.title}
                         </h2>
-                    )}
-                    
-                    {editMode && (
+                    ) : (
                         <input
+                            autoFocus
                             className={cn(
-                                "bg-black/50 focus:border-neon-purple border border-white/10 rounded outline-none px-2 py-1 text-white text-base md:text-sm",
+                                'bg-transparent outline-none font-semibold text-sm uppercase tracking-wide',
+                                'text-[16px]', // iOS: Prevent zoom
+                                theme.textColor
                             )}
                             value={column.title}
                             onChange={(e) => updateColumn(column.id, e.target.value)}
-                            autoFocus
                             onBlur={() => setEditMode(false)}
                             onKeyDown={(e) => {
-                                if (e.key !== "Enter") return;
-                                setEditMode(false);
+                                if (e.key === 'Enter' || e.key === 'Escape') setEditMode(false);
                             }}
+                            onClick={(e) => e.stopPropagation()} // Prevent accordion toggle
                         />
                     )}
                 </div>
-                
-                <button
-                    onClick={() => deleteColumn(column.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-red-500 rounded p-1 hover:bg-white/5"
+
+                {/* Delete Column Button */}
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        deleteColumn(column.id);
+                    }}
+                    className={cn(
+                        'opacity-0 group-hover:opacity-100 transition-opacity p-2.5 rounded-lg touch-target',
+                        // Mobile: Always visible if preferred, or rely on group-hover
+                        'opacity-100 md:opacity-0 touch-visible',
+                        isDark
+                            ? 'text-gray-500 hover:text-red-400 active:text-red-400 hover:bg-white/5 active:bg-white/10'
+                            : 'text-slate-400 hover:text-red-500 active:text-red-500 hover:bg-slate-100 active:bg-red-50'
+                    )}
                 >
                     <Trash2 size={18} />
-                </button>
+                </motion.button>
             </div>
-            
-            {/* Decorative Line under header (Neon Glow effect) */}
-            <div className={cn("h-[2px] w-full mt-1", theme.borderColor.replace('border-', 'bg-'), theme.glow)}></div>
 
-            {/* Column Task Container - Independent Scroll */}
-            <div 
-                className={cn(
-                    "flex-1 min-h-0 flex flex-col gap-4 p-3 overflow-y-auto overflow-x-hidden",
-                    "scrollbar-hide hover:scrollbar-default"
-                )}
-                style={{
-                    overscrollBehaviorY: "contain",
-                    touchAction: "pan-y"
-                }}
-            >
-                <SortableContext items={tasksIds} strategy={verticalListSortingStrategy}>
-                    {tasks.map((task) => (
-                        <TaskCard
-                            key={task.id}
-                            task={task}
-                            deleteTask={deleteTask}
-                            updateTask={updateTask}
-                        />
-                    ))}
-                    {tasks.length === 0 && !isOver && (
-                         <div className={cn(
-                             "flex flex-col items-center justify-center p-8 mt-4 border border-dashed rounded-xl text-sm",
-                             isDark 
-                                 ? "border-white/10 bg-white/5 text-gray-500" 
-                                 : "border-slate-300 bg-slate-50 text-slate-400"
-                         )}>
-                             <p>Drop items here</p>
+            {/* Decorative Glow Line (Always visible) */}
+            <div className={cn('h-[2px] w-full', theme.bgGlow, theme.shadowGlow)} />
+
+            {/* Content Area - Collapsible on Mobile */}
+            <AnimatePresence initial={false}>
+                {!isCollapsed && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={cn(
+                            'flex-1 flex flex-col',
+                            'md:h-full md:opacity-100 md:block' // Force visible on desktop
+                        )}
+                    >
+                        {/* Task List Container */}
+                        <div
+                            className={cn(
+                                'flex-1 flex flex-col gap-3 p-3',
+                                // Mobile: Min height for drop target only when open
+                                'min-h-[150px]',
+                                // Desktop: Scrollable area
+                                'md:overflow-y-auto md:overflow-x-hidden no-scrollbar'
+                            )}
+                            style={{
+                                overscrollBehaviorY: 'contain',
+                                WebkitOverflowScrolling: 'touch',
+                            }}
+                        >
+                            <SortableContext items={tasksIds} strategy={verticalListSortingStrategy}>
+                                <AnimatePresence mode="popLayout">
+                                    {tasks.map(task => (
+                                        <TaskCard
+                                            key={task.id}
+                                            task={task}
+                                            deleteTask={deleteTask}
+                                            updateTask={updateTask}
+                                        />
+                                    ))}
+                                </AnimatePresence>
+                            </SortableContext>
+
+                            {/* Empty State */}
+                            <AnimatePresence>
+                                {tasks.length === 0 && !isOver && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className={cn(
+                                            'flex flex-col items-center justify-center p-8 mt-4',
+                                            'min-h-[120px]',
+                                            'border border-dashed rounded-xl text-center',
+                                            isDark
+                                                ? 'border-white/10 bg-white/5 text-gray-500'
+                                                : 'border-slate-300 bg-slate-50 text-slate-400'
+                                        )}
+                                    >
+                                        <Inbox size={32} className="mb-2 opacity-50" />
+                                        <p className="text-sm font-medium">No tasks yet</p>
+                                        <p className="text-xs opacity-75 mt-1">Drop items here</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Active Drop Zone Indicator */}
+                            <AnimatePresence>
+                                {isOver && tasks.length === 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        className={cn(
+                                            'flex items-center justify-center p-8',
+                                            'min-h-[120px]',
+                                            'border-2 border-dashed rounded-xl',
+                                            isDark
+                                                ? 'border-neon-purple/70 bg-neon-purple/10 text-neon-purple'
+                                                : 'border-purple-400 bg-purple-100 text-purple-600'
+                                        )}
+                                    >
+                                        <motion.p 
+                                            className="text-sm font-semibold"
+                                            animate={{ scale: [1, 1.05, 1] }}
+                                            transition={{ duration: 0.5, repeat: Infinity }}
+                                        >
+                                            Drop here ✓
+                                        </motion.p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
-                    )}
-                </SortableContext>
-            </div>
 
-            {/* Column Footer / Add Button */}
-            <div className="p-3 pt-0">
-                <button
-                    className={cn(
-                        "flex gap-2 items-center justify-center w-full py-3 rounded-lg",
-                        "border border-dashed transition-all duration-200 bg-transparent",
-                        "font-medium text-sm",
-                        appTheme === "gradient"
-                            ? "border-white/40 text-white/60 hover:bg-white/10 hover:text-white"
-                            : isDark
-                                ? "border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300"
-                                : "border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-600"
-                    )}
-                    onClick={() => createTask(column.id)}
-                >
-                    <Plus size={18} />
-                    Add Task
-                </button>
-            </div>
-        </div>
+                        {/* Add Task Button */}
+                        <div className="p-3 pt-0">
+                            <motion.button
+                                whileHover={{ scale: 1.01 }}
+                                whileTap={{ scale: 0.99 }}
+                                className={cn(
+                                    'flex gap-2 items-center justify-center w-full py-3 rounded-lg touch-target',
+                                    'border border-dashed transition-all duration-200 bg-transparent',
+                                    'font-medium text-sm',
+                                    appTheme === 'gradient'
+                                        ? 'border-white/40 text-white/60 hover:bg-white/10 hover:text-white active:bg-white/20'
+                                        : isDark
+                                            ? 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300 hover:bg-white/5 active:bg-white/10'
+                                            : 'border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-600 hover:bg-slate-50 active:bg-slate-100'
+                                )}
+                                onClick={() => createTask(column.id)}
+                            >
+                                <Plus size={18} />
+                                Add Task
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
     );
 }
 
 export default memo(ColumnContainer);
+

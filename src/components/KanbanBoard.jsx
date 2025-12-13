@@ -1,5 +1,6 @@
-import { useMemo, useState, useEffect, useRef } from "react";
-import { Plus, Menu } from "lucide-react";
+import { useRef, useMemo, useCallback, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Menu, Search, Keyboard } from 'lucide-react';
 import {
     DndContext,
     DragOverlay,
@@ -9,517 +10,316 @@ import {
     useSensors,
     pointerWithin,
     MeasuringStrategy,
-} from "@dnd-kit/core";
-import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
-import { createPortal } from "react-dom";
-import confetti from "canvas-confetti";
-import ColumnContainer from "./ColumnContainer";
-import TaskCard from "./TaskCard";
-import ProgressBar from "./ProgressBar";
-import { v4 as uuidv4 } from "uuid";
-import { safeJSONParse, cn } from "../utils";
-import { TASK_COLORS, getRandomColor } from "../constants";
-import { useTheme } from "../contexts/ThemeContext";
+} from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { createPortal } from 'react-dom';
 
-const defaultCols = [
-    {
-        id: "todo",
-        title: "Todo",
-    },
-    {
-        id: "doing",
-        title: "In Progress",
-    },
-    {
-        id: "done",
-        title: "Done",
-    },
-];
+import ColumnContainer from './ColumnContainer';
+import ColumnDock from './ColumnDock';
+import TaskCard from './TaskCard';
+import ThemeSwitcher from './ThemeSwitcher';
+import ProgressBar from './ProgressBar';
+import { useKanban, useAppShortcuts } from '../hooks';
+import { cn } from '../utils';
+import { useTheme } from '../contexts/ThemeContext';
+import { DND_CONFIG } from '../lib/constants';
+import { staggerContainer, staggerItem } from '../lib/animations';
 
-const defaultTasks = [
-    {
-        id: "1",
-        columnId: "todo",
-        title: "Admin APIs",
-        content: "List admin APIs for dashboard",
-        color: TASK_COLORS.yellow,
-        priority: "High",
-    },
-    {
-        id: "2",
-        columnId: "todo",
-        title: "User Registration",
-        content: "Develop user registration functionality with OTP delivered on SMS after email confirmation and phone number confirmation",
-        color: TASK_COLORS.green,
-        priority: "High",
-    },
-    {
-        id: "3",
-        columnId: "doing",
-        title: "Security Testing",
-        content: "Conduct security testing",
-        color: TASK_COLORS.blue,
-        priority: "High",
-    },
-    {
-        id: "4",
-        columnId: "doing",
-        title: "Competitor Analysis",
-        content: "Analyze competitors",
-        color: TASK_COLORS.pink,
-        priority: "Medium",
-    },
-    {
-        id: "5",
-        columnId: "done",
-        title: "UI Kit Docs",
-        content: "Create UI kit documentation",
-        color: TASK_COLORS.orange,
-        priority: "Low",
-    },
-    {
-        id: "6",
-        columnId: "done",
-        title: "Meeting",
-        content: "Dev meeting",
-        color: TASK_COLORS.purple,
-        priority: "Medium",
-    },
-    {
-        id: "7",
-        columnId: "done",
-        title: "Dashboard Prototype",
-        content: "Deliver dashboard prototype",
-        color: TASK_COLORS.yellow,
-        priority: "High",
-    },
-    {
-        id: "8",
-        columnId: "todo",
-        title: "Performance",
-        content: "Optimize application performance",
-        color: TASK_COLORS.green,
-        priority: "Medium",
-    },
-    {
-        id: "9",
-        columnId: "todo",
-        title: "Data Validation",
-        content: "Implement data validation",
-        color: TASK_COLORS.blue,
-        priority: "Medium",
-    },
-    {
-        id: "10",
-        columnId: "todo",
-        title: "DB Schema",
-        content: "Design database schema",
-        color: TASK_COLORS.pink,
-        priority: "High",
-    },
-    {
-        id: "11",
-        columnId: "todo",
-        title: "SSL Certs",
-        content: "Integrate SSL web certificates into workflow",
-        color: TASK_COLORS.orange,
-        priority: "Low",
-    },
-    {
-        id: "12",
-        columnId: "doing",
-        title: "Logging",
-        content: "Implement error logging and monitoring",
-        color: TASK_COLORS.purple,
-        priority: "Medium",
-    },
-    {
-        id: "13",
-        columnId: "doing",
-        title: "Responsive UI",
-        content: "Design and implement responsive UI",
-        color: TASK_COLORS.yellow,
-        priority: "High",
-    },
-];
-
+/**
+ * Main Kanban Board component
+ * With dynamic snap toggle for smooth mobile drag-and-drop
+ */
 function KanbanBoard({ projectId, onToggleSidebar }) {
     const { themeConfig, isDark, theme } = useTheme();
-    const [columns, setColumns] = useState(() => {
-        const saved = safeJSONParse(`kanban-columns-${projectId}`, null);
-        if (Array.isArray(saved)) return saved;
+    const searchInputRef = useRef(null);
+    const scrollContainerRef = useRef(null);
 
-        // Migration for default project
-        if (projectId === "default") {
-            const legacy = safeJSONParse("kanban-columns", null);
-            if (Array.isArray(legacy)) return legacy;
-        }
+    // Use custom hook for all kanban logic
+    const {
+        columns,
+        tasksByColumn,
+        columnIds,
+        activeColumn,
+        activeTask,
+        searchQuery,
+        stats,
+        createColumn,
+        updateColumn,
+        deleteColumn,
+        createTask,
+        updateTask,
+        deleteTask,
+        setSearchQuery,
+        handleDragStart,
+        handleDragEnd,
+        handleDragOver,
+    } = useKanban(projectId);
 
-        return defaultCols;
-    });
+    // Determine if currently dragging (for snap toggle)
+    const isDragging = !!(activeColumn || activeTask);
 
-    const [tasks, setTasks] = useState(() => {
-        const saved = safeJSONParse(`kanban-tasks-${projectId}`, null);
-        if (Array.isArray(saved)) return saved;
-
-        // Migration for default project
-        if (projectId === "default") {
-            const legacy = safeJSONParse("kanban-tasks", null);
-            if (Array.isArray(legacy)) return legacy;
-            return defaultTasks;
-        }
-
-        return [];
-    });
-
-    const columnsId = columns.map((col) => col.id);
-
-    const [activeColumn, setActiveColumn] = useState(null);
-    const [activeTask, setActiveTask] = useState(null);
-
+    // DnD sensors configuration
     const sensors = useSensors(
         useSensor(MouseSensor, {
             activationConstraint: {
-                distance: 10,
+                distance: DND_CONFIG.MOUSE_ACTIVATION_DISTANCE,
             },
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 250,
-                tolerance: 5,
+                delay: DND_CONFIG.TOUCH_DELAY,
+                tolerance: DND_CONFIG.TOUCH_TOLERANCE,
             },
         })
     );
 
-    // Measuring configuration for smoother drag calculations
-    const measuringConfig = {
+    // DnD measuring configuration
+    const measuringConfig = useMemo(() => ({
         droppable: {
             strategy: MeasuringStrategy.Always,
         },
-    };
-    
-    // Track if we should fire confetti (set in onDragOver, fired in onDragEnd)
-    const shouldFireConfetti = useRef(false);
+    }), []);
 
-    // Celebration confetti effect
-    const triggerConfetti = () => {
-        // First burst
-        confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#FF3366', '#33E1FF', '#33FF99', '#B833FF', '#FFD700'],
-            disableForReducedMotion: true,
-        });
-        // Second burst for more impact
-        setTimeout(() => {
-            confetti({
-                particleCount: 50,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                colors: ['#FF3366', '#33E1FF', '#33FF99', '#B833FF'],
-            });
-            confetti({
-                particleCount: 50,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                colors: ['#FF3366', '#33E1FF', '#33FF99', '#B833FF'],
-            });
-        }, 150);
-    };
+    // Keyboard shortcut: Focus search
+    const focusSearch = useCallback(() => {
+        searchInputRef.current?.focus();
+    }, []);
 
+    // Keyboard shortcut: Create new task in first column
+    const handleNewTask = useCallback(() => {
+        if (columns.length > 0) {
+            createTask(columns[0].id);
+        }
+    }, [columns, createTask]);
+
+    // Setup keyboard shortcuts
+    useAppShortcuts({
+        onSearch: focusSearch,
+        onNewTask: handleNewTask,
+        onToggleSidebar,
+    });
+
+    // Detect mobile for conditional logic
+    const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
-        localStorage.setItem(`kanban-columns-${projectId}`, JSON.stringify(columns));
-    }, [columns, projectId]);
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
-    useEffect(() => {
-        localStorage.setItem(`kanban-tasks-${projectId}`, JSON.stringify(tasks));
-    }, [tasks, projectId]);
+    // Dynamic Sortable Strategy
+    const sortableStrategy = isMobile 
+        ? verticalListSortingStrategy 
+        : horizontalListSortingStrategy;
 
-    const [searchQuery, setSearchQuery] = useState("");
-
-    const filteredTasks = useMemo(() => {
-        if (!searchQuery) return tasks;
-        return tasks.filter(
-            (task) =>
-                task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                task.content.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [tasks, searchQuery]);
-
-    const tasksByColumn = useMemo(() => {
-        const groups = {};
-        columns.forEach(col => { groups[col.id] = []; });
-        filteredTasks.forEach(task => {
-            if (groups[task.columnId]) {
-                groups[task.columnId].push(task);
-            } else {
-                // Handle tasks that might belong to deleted columns or initial state quirks
-                // by skipping them or putting them in a default
-            }
-        });
-        return groups;
-    }, [filteredTasks, columns]);
-
-    function createTask(columnId) {
-        const newTask = {
-            id: uuidv4(),
-            columnId,
-            title: `Task ${tasks.length + 1}`,
-            content: "",
-            color: getRandomColor(),
-            priority: "Medium",
-        };
-        setTasks([...tasks, newTask]);
-    }
-
-    function deleteTask(id) {
-        const newTasks = tasks.filter((task) => task.id !== id);
-        setTasks(newTasks);
-    }
-
-    function updateTask(id, updates) {
-        const newTasks = tasks.map((task) => {
-            if (task.id !== id) return task;
-            return { ...task, ...updates };
-        });
-        setTasks(newTasks);
-    }
-
-    function createNewColumn() {
-        const columnToAdd = {
-            id: uuidv4(),
-            title: `Column ${columns.length + 1}`,
-        };
-        setColumns([...columns, columnToAdd]);
-    }
-
-    function deleteColumn(id) {
-        const filteredColumns = columns.filter((col) => col.id !== id);
-        setColumns(filteredColumns);
-
-        const newTasks = tasks.filter((t) => t.columnId !== id);
-        setTasks(newTasks);
-    }
-
-    function updateColumn(id, title) {
-        const newColumns = columns.map((col) => {
-            if (col.id !== id) return col;
-            return { ...col, title };
-        });
-        setColumns(newColumns);
-    }
-
-    function onDragStart(event) {
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-            navigator.vibrate(10);
-        }
-        if (event.active.data.current?.type === "Column") {
-            setActiveColumn(event.active.data.current.column);
-            return;
-        }
-
-        if (event.active.data.current?.type === "Task") {
-            setActiveTask(event.active.data.current.task);
-            return;
-        }
-    }
-
-    function onDragEnd(event) {
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-            navigator.vibrate([10, 30, 10]);
-        }
-        setActiveColumn(null);
-        setActiveTask(null);
-
-        // Fire confetti if a task was just moved to done
-        if (shouldFireConfetti.current) {
-            triggerConfetti();
-            shouldFireConfetti.current = false;
-        }
-
-        const { active, over } = event;
-        if (!over) return;
-
-        const activeId = active.id;
-        const overId = over.id;
-
-        if (activeId === overId) return;
-
-        const isActiveTask = active.data.current?.type === "Task";
-        const isOverTask = over.data.current?.type === "Task";
-
-        // Task Sorting (Same Column) - Finalize order here
-        if (isActiveTask && isOverTask && activeId !== overId) {
-            setTasks((tasks) => {
-                const activeIndex = tasks.findIndex((t) => t.id === activeId);
-                const overIndex = tasks.findIndex((t) => t.id === overId);
-                if (activeIndex !== -1 && overIndex !== -1 && tasks[activeIndex].columnId === tasks[overIndex].columnId) {
-                    return arrayMove(tasks, activeIndex, overIndex);
-                }
-                return tasks;
-            });
-        }
-
-        const isActiveColumn = active.data.current?.type === "Column";
-        if (!isActiveColumn) return;
-
-        setColumns((columns) => {
-            const activeColumnIndex = columns.findIndex((col) => col.id === activeId);
-            const overColumnIndex = columns.findIndex((col) => col.id === overId);
-            return arrayMove(columns, activeColumnIndex, overColumnIndex);
-        });
-    }
-
-    function onDragOver(event) {
-        const { active, over } = event;
-        if (!over) return;
-
-        const activeId = active.id;
-        const overId = over.id;
-
-        if (activeId === overId) return;
-
-        const isActiveTask = active.data.current?.type === "Task";
-        const isOverTask = over.data.current?.type === "Task";
-
-        if (!isActiveTask) return;
-        
-        // Get the task being dragged
-        const activeTask = active.data.current?.task;
-        const wasInDone = activeTask?.columnId === "done";
-
-        // Im dropping a Task over another Task
-        if (isActiveTask && isOverTask) {
-            const overTask = over.data.current?.task;
-            const targetColumnId = overTask?.columnId;
-            
-            // Check if moving TO done from somewhere else
-            if (!wasInDone && targetColumnId === "done") {
-                shouldFireConfetti.current = true;
-            }
-            
-            setTasks((tasks) => {
-                const activeIndex = tasks.findIndex((t) => t.id === activeId);
-                const overIndex = tasks.findIndex((t) => t.id === overId);
-
-                if (activeIndex === -1 || overIndex === -1) return tasks;
-
-                if (tasks[activeIndex].columnId !== tasks[overIndex].columnId) {
-                    const newTasks = [...tasks];
-                    newTasks[activeIndex] = { ...newTasks[activeIndex], columnId: newTasks[overIndex].columnId };
-                    return arrayMove(newTasks, activeIndex, overIndex - 1);
-                }
-
-                // Skip re-rendering for same-column moves during drag (handled visually by dnd-kit, committed onDragEnd)
-                return tasks; 
-            });
-        }
-
-        const isOverColumn = over.data.current?.type === "Column";
-
-        // Im dropping a Task over a column
-        if (isActiveTask && isOverColumn) {
-            // Check if moving TO done from somewhere else
-            if (!wasInDone && overId === "done") {
-                shouldFireConfetti.current = true;
-            }
-            
-            setTasks((tasks) => {
-                const activeIndex = tasks.findIndex((t) => t.id === activeId);
-                if (activeIndex === -1) return tasks;
-
-                const newTasks = [...tasks];
-                newTasks[activeIndex].columnId = overId;
-                return arrayMove(newTasks, activeIndex, activeIndex);
-            });
-        }
-    }
+    // AutoScroll optimized for layout direction
+    const autoScrollConfig = useMemo(() => ({
+        enabled: true,
+        threshold: {
+            x: isMobile ? 0 : 0.2, // Mobile: No horizontal scroll
+            y: isMobile ? 0.2 : 0, // Mobile: Vertical scroll only
+        },
+        acceleration: 0,
+        maxSpeed: 12,
+        layoutShiftCompensation: false,
+    }), [isMobile]);
 
     return (
-        <div
-            className="h-full w-full flex flex-col overflow-hidden"
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex-1 flex flex-col h-[100dvh] overflow-hidden"
         >
-            <div className="flex-1 min-h-0 w-full flex flex-col p-4 md:p-8 gap-4 md:gap-6">
-                {/* Header */}
-                <div className="w-full flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
-                    <div className="flex items-center gap-2 flex-1 w-full">
-                        <button
+            {/* Header Bar */}
+            <div className="flex-shrink-0 overflow-hidden relative z-40 bg-inherit">
+                <motion.div
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-4 md:px-8 py-5"
+                >
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             className={cn(
-                                "md:hidden p-2 rounded-lg transition-colors shrink-0",
-                                isDark ? "text-gray-400 hover:bg-white/10 hover:text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                                'p-2 rounded-lg transition-colors md:hidden touch-target shrink-0',
+                                isDark
+                                    ? 'text-gray-400 hover:bg-white/10 hover:text-white'
+                                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                             )}
                             onClick={onToggleSidebar}
+                            aria-label="Toggle sidebar"
                         >
                             <Menu size={24} />
-                        </button>
-                        <ProgressBar tasks={tasks} />
+                        </motion.button>
+                        
+                        {/* Mobile Theme Switcher */}
+                        <div className="md:hidden">
+                            <ThemeSwitcher isInline />
+                        </div>
+
+                        <div className="flex-1 md:flex-none">
+                            <ProgressBar stats={stats} />
+                        </div>
                     </div>
-                    <input
-                        className={cn(
-                            "p-3 rounded-lg outline-none w-full md:w-[300px] shrink-0 transition-all duration-300",
-                            themeConfig.inputBg,
-                            isDark 
-                                ? "focus:border-neon-purple focus:shadow-[0_0_15px_rgba(184,51,255,0.2)]"
-                                : theme === "gradient"
-                                    ? "focus:border-white/50 focus:shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                                    : "focus:border-purple-500 focus:shadow-md focus:ring-1 focus:ring-purple-200"
-                        )}
-                        placeholder="Search tasks..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-                
+                    
+                    {/* Search Input */}
+                    <div className="relative w-full md:w-[300px] shrink-0">
+                        <Search 
+                            size={18} 
+                            className={cn(
+                                'absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none',
+                                isDark ? 'text-gray-500' : 'text-slate-400'
+                            )} 
+                        />
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            className={cn(
+                                'w-full pl-10 pr-4 py-3 rounded-lg outline-none transition-all duration-300',
+                                'text-[16px]', // iOS: Prevent zoom on focus
+                                themeConfig.inputBg,
+                                isDark
+                                    ? 'focus:border-neon-purple focus:shadow-[0_0_15px_rgba(184,51,255,0.2)]'
+                                    : theme === 'gradient'
+                                        ? 'focus:border-white/50 focus:shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                        : 'focus:border-purple-500 focus:shadow-md focus:ring-1 focus:ring-purple-200'
+                            )}
+                            placeholder="Search tasks..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                        />
+                        {/* Keyboard shortcut hint */}
+                        <div className={cn(
+                            'absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 text-xs',
+                            isDark ? 'text-gray-600' : 'text-slate-400'
+                        )}>
+                            <kbd className={cn(
+                                'px-1.5 py-0.5 rounded border text-[10px] font-mono',
+                                isDark 
+                                    ? 'border-white/10 bg-white/5' 
+                                    : 'border-slate-200 bg-slate-100'
+                            )}>/</kbd>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* DnD Context & Board */}
                 <DndContext
                     sensors={sensors}
                     collisionDetection={pointerWithin}
                     measuring={measuringConfig}
-                    onDragStart={onDragStart}
-                    onDragEnd={onDragEnd}
-                    onDragOver={onDragOver}
+                    autoScroll={autoScrollConfig}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
                 >
-                    <div className="flex-1 min-h-0 flex flex-row overflow-x-auto overflow-y-hidden gap-4 px-2 md:px-0 items-stretch no-scrollbar">
-                        <SortableContext items={columnsId} strategy={horizontalListSortingStrategy}>
-                            {columns.map((col) => (
-                                <ColumnContainer
-                                    key={col.id}
-                                    column={col}
-                                    deleteColumn={deleteColumn}
-                                    updateColumn={updateColumn}
-                                    createTask={createTask}
-                                    deleteTask={deleteTask}
-                                    updateTask={updateTask}
-                                    tasks={tasksByColumn[col.id] || []}
-                                />
-                            ))}
+                    {/* 
+                        Responsive Layout:
+                        - Mobile: flex-col, overflow-y-auto (Vertical Accordion)
+                        - Desktop: flex-row, overflow-x-auto (Horizontal Kanban)
+                    */}
+                    <motion.div 
+                        ref={scrollContainerRef}
+                        id="kanban-scroll-container"
+                        variants={staggerContainer}
+                        initial="initial"
+                        animate="animate"
+                        className={cn(
+                            'flex-1 min-h-0 flex',
+                            // Mobile: Vertical layout, Y-scroll
+                            'flex-col overflow-y-auto overflow-x-hidden px-4 pb-24',
+                            // Desktop: Horizontal layout, X-scroll
+                            'md:flex-row md:overflow-x-auto md:overflow-y-hidden md:gap-4 md:px-0 md:items-stretch md:pb-0',
+                            
+                            'no-scrollbar',
+                            
+                            // Snap: Only for Desktop horizontal scrolling
+                            !isDragging && 'md:snap-x md:snap-mandatory',
+                            
+                            // iOS optimizations based on direction
+                            'ios-scroll-y md:ios-scroll-x'
+                        )}
+                        style={{
+                            WebkitOverflowScrolling: 'touch',
+                            // Scroll behavior
+                            scrollBehavior: isDragging ? 'auto' : 'smooth',
+                        }}
+                    >
+                        <SortableContext items={columnIds} strategy={sortableStrategy}>
+                            <AnimatePresence mode="popLayout">
+                                {columns.map((col, index) => (
+                                    <motion.div
+                                        key={col.id}
+                                        variants={staggerItem}
+                                        layout
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        transition={{ delay: index * 0.05 }}
+                                    >
+                                        <ColumnContainer
+                                            column={col}
+                                            deleteColumn={deleteColumn}
+                                            updateColumn={updateColumn}
+                                            createTask={createTask}
+                                            deleteTask={deleteTask}
+                                            updateTask={updateTask}
+                                            tasks={tasksByColumn[col.id] || []}
+                                        />
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                         </SortableContext>
-                        
-                        <button
-                            onClick={() => {
-                                createNewColumn();
-                            }}
+
+                        {/* Add Column Button */}
+                        <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={createColumn}
                             className={cn(
-                                "h-[60px] min-w-[85vw] md:min-w-[350px] md:w-[350px] shrink-0 snap-center cursor-pointer rounded-xl p-4 flex gap-2 items-center justify-center self-start",
-                                "border-2 border-dashed transition-all",
+                                // Mobile: Full width
+                                'h-[60px] w-full shrink-0 cursor-pointer rounded-xl p-4 flex gap-2 items-center justify-center touch-target',
+                                // Desktop: Fixed width
+                                'md:min-w-[350px] md:w-[350px] md:self-start',
+                                
+                                'border-2 border-dashed transition-all',
+                                !isDragging && 'md:snap-center',
                                 isDark
-                                    ? "bg-white/5 border-white/10 hover:border-gray-500 text-gray-500 hover:text-white hover:bg-white/10"
-                                    : "bg-slate-50 border-slate-300 hover:border-slate-400 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                                    ? 'bg-white/5 border-white/10 hover:border-gray-500 text-gray-500 hover:text-white hover:bg-white/10'
+                                    : 'bg-slate-50 border-slate-300 hover:border-slate-400 text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                             )}
                         >
-                            <Plus />
-                            Add Column
-                        </button>
-                    </div>
+                            <Plus size={20} />
+                            <span className="font-medium">Add Column</span>
+                        </motion.button>
+                    </motion.div>
 
+                    {/* Mobile Teleport Dock */}
+                    {createPortal(
+                        <ColumnDock 
+                            columns={columns} 
+                            isDragging={isDragging} 
+                            activeTaskId={activeTask?.id}
+                        />,
+                        document.body
+                    )}
+
+                    {/* Drag Overlay - rendered in portal for z-index */}
                     {createPortal(
                         <DragOverlay
                             dropAnimation={{
                                 duration: 200,
-                                easing: 'ease-out',
+                                easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
                             }}
+                            style={{ zIndex: 9999 }}
                         >
                             {activeColumn && (
                                 <ColumnContainer
@@ -545,7 +345,28 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     )}
                 </DndContext>
             </div>
-        </div>
+
+            {/* Keyboard Shortcuts Hint (Desktop only) */}
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className={cn(
+                    'hidden md:flex items-center gap-4 px-8 py-3 text-xs',
+                    isDark ? 'text-gray-600' : 'text-slate-400'
+                )}
+            >
+                <div className="flex items-center gap-1.5">
+                    <Keyboard size={14} />
+                    <span>Shortcuts:</span>
+                </div>
+                <div className="flex items-center gap-4">
+                    <span><kbd className="px-1.5 py-0.5 rounded border border-current/20">N</kbd> New Task</span>
+                    <span><kbd className="px-1.5 py-0.5 rounded border border-current/20">/</kbd> Search</span>
+                    <span><kbd className="px-1.5 py-0.5 rounded border border-current/20">B</kbd> Sidebar</span>
+                </div>
+            </motion.div>
+        </motion.div>
     );
 }
 

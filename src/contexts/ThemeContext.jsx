@@ -22,39 +22,71 @@ function getGradientByTime() {
     switch (timeOfDay) {
         case "morning":
             return {
-                background: "bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200",
+                background: "bg-gradient-to-br from-indigo-300 via-purple-300 to-pink-300",
                 metaThemeColor: "#C7D2FE",
-                cardBg: "bg-white/30",
+                cardBg: "bg-white/40 backdrop-blur-xl",
                 textPrimary: "text-slate-800",
                 textSecondary: "text-slate-600",
+                textMuted: "text-slate-500",
+                sidebarBg: "bg-white/30 backdrop-blur-xl border-r border-white/30",
+                inputBg: "bg-white/40 backdrop-blur-md border border-slate-300/50 text-slate-800 placeholder:text-slate-500",
+                buttonBg: "bg-white/30",
+                buttonHover: "hover:bg-white/50",
+                borderColor: "border-slate-300/30",
+                cardBorder: "border-white/30",
+                cardHover: "hover:border-slate-400/50 hover:shadow-lg",
                 isDark: false,
             };
         case "day":
             return {
-                background: "bg-gradient-to-br from-cyan-200 via-blue-200 to-indigo-300",
+                background: "bg-gradient-to-br from-cyan-300 via-blue-300 to-indigo-400",
                 metaThemeColor: "#A5F3FC",
-                cardBg: "bg-white/30",
+                cardBg: "bg-white/40 backdrop-blur-xl",
                 textPrimary: "text-slate-800",
                 textSecondary: "text-slate-600",
+                textMuted: "text-slate-500",
+                sidebarBg: "bg-white/30 backdrop-blur-xl border-r border-white/30",
+                inputBg: "bg-white/40 backdrop-blur-md border border-slate-300/50 text-slate-800 placeholder:text-slate-500",
+                buttonBg: "bg-white/30",
+                buttonHover: "hover:bg-white/50",
+                borderColor: "border-slate-300/30",
+                cardBorder: "border-white/30",
+                cardHover: "hover:border-slate-400/50 hover:shadow-lg",
                 isDark: false,
             };
         case "sunset":
             return {
-                background: "bg-gradient-to-br from-orange-300 via-red-300 to-purple-400",
+                background: "bg-gradient-to-br from-orange-400 via-rose-400 to-purple-500",
                 metaThemeColor: "#FDBA74",
-                cardBg: "bg-white/20",
-                textPrimary: "text-slate-900",
-                textSecondary: "text-slate-700",
-                isDark: false,
+                cardBg: "bg-white/30 backdrop-blur-xl",
+                textPrimary: "text-white",
+                textSecondary: "text-white/80",
+                textMuted: "text-white/60",
+                sidebarBg: "bg-black/20 backdrop-blur-xl border-r border-white/20",
+                inputBg: "bg-white/20 backdrop-blur-md border border-white/30 text-white placeholder:text-white/60",
+                buttonBg: "bg-white/20",
+                buttonHover: "hover:bg-white/30",
+                borderColor: "border-white/20",
+                cardBorder: "border-white/20",
+                cardHover: "hover:border-white/40 hover:shadow-lg",
+                isDark: true, // Sunset is dark enough for white text
             };
         case "night":
         default:
             return {
                 background: "bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900",
                 metaThemeColor: "#111827",
-                cardBg: "bg-black/30",
+                cardBg: "bg-black/30 backdrop-blur-xl",
                 textPrimary: "text-gray-100",
                 textSecondary: "text-gray-400",
+                textMuted: "text-gray-500",
+                sidebarBg: "bg-black/30 backdrop-blur-xl border-r border-white/10",
+                inputBg: "bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder:text-white/50",
+                buttonBg: "bg-white/10",
+                buttonHover: "hover:bg-white/20",
+                borderColor: "border-white/10",
+                cardBorder: "border-white/10",
+                cardHover: "hover:border-white/30 hover:shadow-lg",
                 isDark: true,
             };
     }
@@ -94,18 +126,8 @@ const themeConfigs = {
         borderColor: "border-slate-200",
         isDark: false,
     },
-    gradient: {
-        // Dynamic - will be computed based on time
-        ...getGradientByTime(),
-        cardBorder: "border-white/10",
-        cardHover: "hover:border-white/30",
-        textMuted: "text-slate-500",
-        sidebarBg: "bg-white/10 backdrop-blur-xl border-r border-white/10",
-        inputBg: "bg-white/20 backdrop-blur-md border border-white/30 text-white placeholder:text-white/60",
-        buttonBg: "bg-white/10",
-        buttonHover: "hover:bg-white/20",
-        borderColor: "border-white/10",
-    },
+    // Gradient theme is computed dynamically from getGradientByTime()
+    // No static config needed here
 };
 
 // Create context
@@ -138,13 +160,11 @@ export function ThemeProvider({ children }) {
     // Compute current theme config
     const themeConfig = useMemo(() => {
         if (theme === "gradient") {
-            const gradientConfig = getGradientByTime();
-            return {
-                ...themeConfigs.gradient,
-                ...gradientConfig,
-            };
+            // Return the complete gradient config for current time
+            return getGradientByTime();
         }
         return themeConfigs[theme];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [theme, timeOfDay]);
 
     // Update meta theme color

@@ -1,134 +1,425 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   DESIGN TOKENS & ROOT STYLES
+   ============================================ */
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    /* Typography */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    /* Prevent layout shift from scrollbar */
+    scrollbar-gutter: stable;
+
+    /* iOS Safe Area CSS Variables */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+
+    /* Touch target minimum (Apple HIG: 44px) */
+    --touch-target-min: 44px;
+
+    /* iOS Native-like Easing Curves */
+    --ease-ios-standard: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-ios-decelerate: cubic-bezier(0.25, 0.1, 0.25, 1);
+    --ease-ios-accelerate: cubic-bezier(0.55, 0.085, 0.68, 0.53);
 }
 
-html, body {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  overscroll-behavior-y: none;
-  -webkit-tap-highlight-color: transparent;
+/* ============================================
+   RESET & BASE (iOS CRITICAL)
+   ============================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+    /* Prevent iOS text size adjustment */
+    -webkit-text-size-adjust: 100%;
+    /* Default: no tap highlight */
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    /* Lock viewport to prevent any body scroll */
+    height: 100%;
+    height: -webkit-fill-available;
+    overflow: hidden;
+    /* iOS: Prevent pull-to-refresh */
+    overscroll-behavior-y: none;
+    /* Prevent elastic scrolling */
+    position: fixed;
+    width: 100%;
+}
+
+body {
+    height: 100%;
+    height: -webkit-fill-available;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* iOS: Lock body completely */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* iOS: Disable elastic scrolling on body */
+    overscroll-behavior: none;
+    /* iOS: Disable tap highlight */
+    -webkit-tap-highlight-color: transparent;
+    /* iOS: Prevent callout on long-press */
+    -webkit-touch-callout: none;
+    /* iOS: Disable user selection by default */
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Allow text selection only in inputs and textareas */
+input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
 }
 
 #root {
-  min-height: 100%;
-  width: 100%;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    isolation: isolate;
+    /* iOS: Force GPU layer for root */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
-/* Custom Scrollbar Styling (UX Polish) */
+/* ============================================
+   SCROLLBAR STYLING (Touch devices hide scrollbars)
+   ============================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 4px;
+    height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 9999px; /* rounded-full */
-}
-
-::-webkit-scrollbar-corner {
     background: transparent;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.3);
+    border-radius: 9999px;
 }
 
-/* Light mode scrollbar */
-.bg-slate-50 ::-webkit-scrollbar-thumb,
-[class*="from-indigo"] ::-webkit-scrollbar-thumb,
-[class*="from-cyan"] ::-webkit-scrollbar-thumb,
-[class*="from-orange"] ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+/* Hide scrollbar on touch devices */
+@media (pointer: coarse) {
+    ::-webkit-scrollbar {
+        display: none;
+    }
 }
 
-.bg-slate-50 ::-webkit-scrollbar-thumb:hover,
-[class*="from-indigo"] ::-webkit-scrollbar-thumb:hover,
-[class*="from-cyan"] ::-webkit-scrollbar-thumb:hover,
-[class*="from-orange"] ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* ============================================
+   iOS INPUT SAFETY (CRITICAL: Prevent auto-zoom)
+   ============================================ */
+/* Force 16px font on ALL inputs to prevent iOS zoom */
+input,
+textarea,
+select {
+    font-size: 16px !important;
+    /* Ensure proper appearance */
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0; /* Prevent iOS default styling */
 }
 
+/* Reset border-radius for rounded inputs */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+textarea {
+    border-radius: 8px;
+}
+
+/* ============================================
+   TOUCH HYGIENE (iOS Critical)
+   ============================================ */
+/* Base touch optimization for all interactive elements */
+button,
+[role="button"],
+a,
+.cursor-pointer {
+    /* Disable tap highlight */
+    -webkit-tap-highlight-color: transparent;
+    /* Disable callout menu */
+    -webkit-touch-callout: none;
+    /* Optimize touch response */
+    touch-action: manipulation;
+}
+
+/* Draggable items need special treatment */
+[data-draggable="true"],
+.drag-handle {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none; /* dnd-kit handles all touch */
+}
+
+/* Text content that should NOT be selectable */
+h1, h2, h3, h4, h5, h6,
+p,
+span,
+label,
+.select-none {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* ============================================
+   SCROLL CONTAINERS (iOS Critical)
+   ============================================ */
+/* Vertical scroll container - for lists inside columns */
+.ios-scroll-y {
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* CRITICAL: Prevent scroll chain to parent */
+    overscroll-behavior-y: contain;
+    /* iOS momentum scrolling (still useful) */
+    -webkit-overflow-scrolling: touch;
+    /* Only allow vertical pan */
+    touch-action: pan-y;
+}
+
+/* Horizontal scroll container - for column list */
+.ios-scroll-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* CRITICAL: Prevent scroll chain to parent */
+    overscroll-behavior-x: contain;
+    /* iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Only allow horizontal pan */
+    touch-action: pan-x;
+    /* Mobile snap scrolling */
+    scroll-snap-type: x mandatory;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
 @layer utilities {
+    /* Hide scrollbar but keep scrollable */
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
     .no-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
+
+    /* Glass panel effect (with iOS performance fallback) */
     .glass-panel {
-        @apply bg-cardbg backdrop-blur-[12px] border border-white/5 shadow-glass;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
     
-    /* Gradient animation for dynamic sky mode */
+    @supports (backdrop-filter: blur(20px)) {
+        @media (prefers-reduced-motion: no-preference) {
+            .glass-panel {
+                -webkit-backdrop-filter: blur(20px);
+                backdrop-filter: blur(20px);
+            }
+        }
+    }
+
+    /* Gradient animation */
     .animate-gradient-slow {
         background-size: 400% 400%;
+        animation: gradient-shift 15s ease infinite;
+    }
+
+    /* Text gradient */
+    .text-gradient {
+        background: linear-gradient(to right, #B833FF, #33E1FF, #33FF99);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Glow effects */
+    .glow-purple { box-shadow: 0 0 20px rgba(184, 51, 255, 0.4); }
+    .glow-blue { box-shadow: 0 0 20px rgba(51, 225, 255, 0.4); }
+    .glow-green { box-shadow: 0 0 20px rgba(51, 255, 153, 0.4); }
+    .glow-red { box-shadow: 0 0 20px rgba(255, 51, 102, 0.4); }
+
+    /* iOS Touch Target (Apple HIG: 44px minimum) */
+    .touch-target {
+        min-height: var(--touch-target-min);
+        min-width: var(--touch-target-min);
+    }
+
+    /* Safe area padding */
+    .safe-area-padding {
+        padding-top: var(--safe-area-top);
+        padding-bottom: var(--safe-area-bottom);
+        padding-left: var(--safe-area-left);
+        padding-right: var(--safe-area-right);
+    }
+
+    .safe-area-bottom {
+        padding-bottom: var(--safe-area-bottom);
+    }
+
+    /* iOS Native-like transitions */
+    .transition-ios {
+        transition-timing-function: var(--ease-ios-standard);
     }
 }
 
-/* Touch optimization for draggable elements */
-[data-dragging="true"] {
-    z-index: 9999 !important;
-    pointer-events: none;
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
 }
 
-/* Smooth cursor transitions */
-.cursor-grab {
-    cursor: grab;
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
-.cursor-grab:active {
-    cursor: grabbing;
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }
 
-/* Active drag state visual feedback */
+/* iOS-like spring animation via CSS */
+@keyframes ios-bounce-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Haptic feedback simulation - subtle scale pulse */
+@keyframes haptic-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.97); }
+    100% { transform: scale(1); }
+}
+
+.animate-haptic {
+    animation: haptic-pop 0.15s var(--ease-ios-standard);
+}
+
+/* ============================================
+   TOUCH DEVICE SPECIFIC OVERRIDES
+   ============================================ */
 @media (pointer: coarse) {
-    /* Touch devices: increase hit areas */
-    .cursor-grab {
-        min-height: 48px;
+    /* Larger touch targets on touch devices */
+    button,
+    [role="button"],
+    .touch-target {
+        min-height: 44px;
+        min-width: 44px;
     }
-    
-    /* Prevent text selection during drag */
-    .cursor-grab {
-        user-select: none;
-        -webkit-user-select: none;
+
+    /* Ensure enough padding for touch */
+    .touch-friendly {
+        padding: 12px;
+    }
+
+    /* Disable hover effects since they cause "stuck" states */
+    .group:hover .group-hover\:opacity-100 {
+        /* Let touch control visibility instead */
+    }
+
+    /* Force visible action buttons on touch devices */
+    .touch-visible {
+        opacity: 1 !important;
     }
 }
 
-/* ===== SAFARI-SPECIFIC FIXES ===== */
+/* ============================================
+   iOS SAFARI SPECIFIC FIXES
+   ============================================ */
+@supports (-webkit-touch-callout: none) {
+    /* GPU acceleration for all animated elements */
+    .transition-transform,
+    .transition-all,
+    [class*="animate-"] {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
 
-/* Force GPU acceleration for transforms */
-.snap-center {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    /* Sticky positioning fix */
+    .sticky {
+        position: -webkit-sticky;
+        position: sticky;
+    }
+
+    /* Fixed positioning with safe area */
+    .fixed-safe {
+        position: fixed;
+        padding-top: var(--safe-area-top);
+        padding-bottom: var(--safe-area-bottom);
+    }
+
+    /* Snap scrolling improvements */
+    .snap-x {
+        scroll-snap-type: x mandatory;
+        -webkit-scroll-snap-type: x mandatory;
+    }
+
+    .snap-center {
+        scroll-snap-align: center;
+        -webkit-scroll-snap-align: center;
+    }
 }
 
-/* Fix Safari scrolling performance */
-.overflow-y-auto {
-    -webkit-overflow-scrolling: touch;
+/* ============================================
+   PWA STANDALONE MODE STYLES
+   ============================================ */
+@media all and (display-mode: standalone) {
+    /* Extra padding at top for status bar in standalone */
+    .standalone-top-spacing {
+        padding-top: calc(var(--safe-area-top) + 8px);
+    }
+
+    /* Hide browser-specific UI hints */
+    .browser-only {
+        display: none !important;
+    }
 }
 
-/* Fix text rendering in Safari */
+/* ============================================
+   LINE CLAMP (iOS COMPATIBLE)
+   ============================================ */
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -136,33 +427,69 @@ html, body {
     overflow: hidden;
 }
 
-/* Prevent Safari from creating stacking context issues */
-.rounded-xl {
-    -webkit-transform: translate3d(0, 0, 0);
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-/* Fix Safari sticky positioning */
-.sticky {
-    position: -webkit-sticky;
-    position: sticky;
+/* ============================================
+   FOCUS STATES (Accessibility)
+   ============================================ */
+:focus-visible {
+    outline: 2px solid #B833FF;
+    outline-offset: 2px;
+    border-radius: 4px;
 }
 
-/* Reduce repaints on mobile Safari */
-@supports (-webkit-touch-callout: none) {
-    /* iOS Safari specific */
-    .transition-transform {
-        transition: transform 0.2s ease-out;
-        -webkit-transition: -webkit-transform 0.2s ease-out;
+/* Remove default focus for mouse/touch */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ============================================
+   SELECTION STYLING
+   ============================================ */
+::selection {
+    background: rgba(184, 51, 255, 0.3);
+    color: inherit;
+}
+
+/* ============================================
+   REDUCED MOTION (Accessibility)
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
     
-    /* Disable complex animations on iOS */
-    .animate-pulse {
+    .animate-gradient-slow {
         animation: none;
+        background-size: 100% 100%;
+    }
+
+    .glass-panel {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
     }
     
-    /* Force hardware acceleration */
-    .cursor-grab {
-        -webkit-transform: translateZ(0);
-        transform: translateZ(0);
+    .no-print {
+        display: none !important;
     }
 }
