@@ -204,14 +204,18 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
             {/* Priority Line */}
             <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-colors", pStyle.line)} />
 
-            <div className="flex justify-between items-start mb-3 pl-2 min-w-0">
-                <h3 className={cn(
-                    "font-medium leading-snug pr-6 text-base md:text-sm",
-                    "w-full min-w-0 break-words whitespace-normal line-clamp-2",
-                    themeConfig.textPrimary
-                )}>
-                    {task.title}
-                </h3>
+            <div className="flex justify-between items-start gap-2 mb-3 pl-2">
+                {/* Title Container - Takes remaining space, allows shrinking */}
+                <div className="flex-1 min-w-0">
+                    <h3 className={cn(
+                        "font-medium leading-snug text-base md:text-sm",
+                        "break-words line-clamp-2",
+                        themeConfig.textPrimary
+                    )}>
+                        {task.title}
+                    </h3>
+                </div>
+                {/* Priority Badge - Fixed size */}
                 {task.priority && (
                     <span className={cn(
                         "text-[11px] px-2 py-1 rounded-full font-medium border uppercase tracking-wider shrink-0",
@@ -222,10 +226,11 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
                 )}
             </div>
 
-            <div className="flex-1 w-full min-w-0 pl-2 mt-auto">
+            {/* Content - Constrained by parent min-w-0 */}
+            <div className="flex-1 min-w-0 pl-2 mt-auto">
                 <p className={cn(
                     "text-sm leading-relaxed font-light",
-                    "w-full min-w-0 break-words whitespace-pre-wrap line-clamp-3",
+                    "break-words whitespace-pre-wrap line-clamp-3",
                     themeConfig.textSecondary
                 )}>
                     {task.content}
