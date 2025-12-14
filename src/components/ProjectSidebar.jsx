@@ -141,18 +141,14 @@ function ProjectSidebar({
 
                 {/* Project List - iOS scroll isolation */}
                 <div className="flex-1 ios-scroll-y px-4 py-3 flex flex-col gap-1.5">
-                    <AnimatePresence mode="sync">
-                        {projects.map((project, index) => (
+                    <AnimatePresence initial={false}>
+                        {projects.map((project) => (
                             <motion.div
                                 key={project.id}
-                                layout="position"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ 
-                                    delay: index * 0.03,
-                                    layout: { duration: 0.2 }
-                                }}
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.15 }}
                                 onClick={() => onSelectProject(project.id)}
                                 className={cn(
                                     'p-3 rounded-xl cursor-pointer flex justify-between items-center group transition-colors duration-200',
@@ -279,7 +275,7 @@ function ProjectSidebar({
                                 whileTap={{ scale: 0.99 }}
                                 onClick={() => setIsCreating(true)}
                                 className={cn(
-                                    'flex items-center gap-3 p-3 rounded-xl transition-all duration-200 mt-2',
+                                    'flex items-center gap-3 p-3 rounded-xl transition-colors duration-200 mt-2 w-full',
                                     'border border-dashed',
                                     isDark
                                         ? 'border-white/10 text-gray-500 hover:text-neon-purple hover:border-neon-purple/30 hover:bg-neon-purple/5'
