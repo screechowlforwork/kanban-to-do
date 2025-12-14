@@ -353,12 +353,6 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
             {/* Main Card Body - Tap to expand */}
             <div
                 onClick={toggleExpanded}
-                onTouchEnd={(e) => {
-                    // iOS: Prevent ghost clicks
-                    if (!isDragging) {
-                        toggleExpanded(e);
-                    }
-                }}
                 className="flex-1 flex flex-col p-3 pl-1 cursor-pointer min-w-0"
                 style={{ touchAction: 'manipulation' }}
             >

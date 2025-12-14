@@ -245,7 +245,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                                 column={col}
                                                 tasks={tasksByColumn[col.id] || []}
                                                 activeTask={activeTask}
-                                                addTask={createTask}
+                                                createTask={createTask}
                                                 updateTask={updateTask}
                                                 deleteTask={deleteTask}
                                                 updateColumn={updateColumn}
