@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * Custom hook for syncing state with localStorage
@@ -9,8 +9,8 @@ import { useState, useEffect, useCallback } from 'react';
  * @returns {[*, Function, Function]} - [value, setValue, removeValue]
  */
 export function useLocalStorage(key, initialValue) {
-    // Get initial value from localStorage or use fallback
-    const [storedValue, setStoredValue] = useState(() => {
+    // Helper function to get value from localStorage
+    const getStoredValue = useCallback(() => {
         try {
             const item = localStorage.getItem(key);
             return item !== null ? JSON.parse(item) : initialValue;
@@ -18,16 +18,32 @@ export function useLocalStorage(key, initialValue) {
             console.warn(`[useLocalStorage] Error reading "${key}":`, error);
             return initialValue;
         }
-    });
+    }, [key, initialValue]);
+
+    // Get initial value from localStorage or use fallback
+    const [storedValue, setStoredValue] = useState(getStoredValue);
+
+    // CRITICAL FIX: Re-read from localStorage when key changes
+    // This is essential for project switching to work correctly
+    useEffect(() => {
+        const newValue = getStoredValue();
+        setStoredValue(newValue);
+    }, [key, getStoredValue]);
 
     // Persist to localStorage whenever value changes
+    // Use a ref to track the current key to avoid stale writes
+    const keyRef = useRef(key);
+    useEffect(() => {
+        keyRef.current = key;
+    }, [key]);
+
     useEffect(() => {
         try {
-            localStorage.setItem(key, JSON.stringify(storedValue));
+            localStorage.setItem(keyRef.current, JSON.stringify(storedValue));
         } catch (error) {
-            console.error(`[useLocalStorage] Error saving "${key}":`, error);
+            console.error(`[useLocalStorage] Error saving "${keyRef.current}":`, error);
         }
-    }, [key, storedValue]);
+    }, [storedValue]);
 
     // Update state and localStorage
     const setValue = useCallback((value) => {
