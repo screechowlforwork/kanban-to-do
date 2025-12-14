@@ -9,6 +9,7 @@ import TaskCard from './TaskCard';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { cn } from '../utils';
 import { useTheme } from '../contexts/ThemeContext';
+import { ConfirmDialog } from './ui';
 // import { staggerContainer } from '../lib/animations'; // Removed entirely
 
 // Column theme configurations
@@ -88,6 +89,7 @@ function ColumnContainer({
 }) {
     const { isDark, theme: appTheme, themeConfig } = useTheme();
     const [editMode, setEditMode] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     
     // Accordion state: Default open
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -292,7 +294,7 @@ function ColumnContainer({
                     whileTap={{ scale: 0.9 }}
                     onClick={(e) => {
                         e.stopPropagation();
-                        deleteColumn(column.id);
+                        setIsDeleting(true);
                     }}
                     className={cn(
                         'opacity-0 group-hover:opacity-100 transition-opacity p-2.5 rounded-lg touch-target',
@@ -302,6 +304,7 @@ function ColumnContainer({
                             ? 'text-gray-500 hover:text-red-400 active:text-red-400 hover:bg-white/5 active:bg-white/10'
                             : 'text-slate-400 hover:text-red-500 active:text-red-500 hover:bg-slate-100 active:bg-red-50'
                     )}
+                    aria-label="Delete column"
                 >
                     <Trash2 size={18} />
                 </motion.button>
@@ -421,6 +424,21 @@ function ColumnContainer({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Delete Column Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={isDeleting}
+                onClose={() => setIsDeleting(false)}
+                onConfirm={() => deleteColumn(column.id)}
+                title="Delete Column?"
+                message={
+                    tasks.length > 0
+                        ? `Are you sure you want to delete "${column.title}"? This column contains ${tasks.length} task${tasks.length > 1 ? 's' : ''} that will also be deleted.`
+                        : `Are you sure you want to delete "${column.title}"?`
+                }
+                confirmText="Delete Column"
+                variant="danger"
+            />
         </motion.div>
     );
 }
