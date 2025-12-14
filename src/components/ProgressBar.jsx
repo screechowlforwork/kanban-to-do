@@ -19,7 +19,7 @@ function ProgressBar({ stats }) {
     };
 
     return (
-        <div className="flex-1 min-w-[200px] md:min-w-[300px]">
+        <div className="flex-1 w-full min-w-[150px] md:min-w-[300px]">
             {/* Label Row */}
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

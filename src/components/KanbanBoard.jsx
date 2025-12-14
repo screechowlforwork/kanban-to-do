@@ -1,6 +1,6 @@
 import { useRef, useMemo, useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, Search, Keyboard } from 'lucide-react';
+import { Menu, Search, Keyboard, Plus } from 'lucide-react';
 import {
     DndContext,
     DragOverlay,
@@ -47,6 +47,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
         deleteTask,
         updateColumn,
         deleteColumn,
+        createColumn,
         setSearchQuery,
         handleDragStart,
         handleDragEnd,
@@ -119,14 +120,14 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
             autoScroll={{
                 enabled: true,
                 layoutShiftCompensation: false,
-                acceleration: 10,
+                acceleration: 0, // Must be 0 to prevent scroll runaway during drag
                 interval: 10
             }}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
         >
-            <div className="flex flex-col h-full w-full overflow-hidden">
+            <div className="flex flex-col h-full w-full overflow-hidden relative">
                 {/* Header Bar - Fixed Top */}
                 <header 
                     className={cn(
@@ -142,7 +143,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                         animate={{ y: 0, opacity: 1 }}
                         className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 px-4 lg:px-8 py-3"
                     >
-                        <div className="flex items-center gap-4 w-full lg:w-auto">
+                        <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -218,7 +219,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     className={cn(
                         "flex-1 w-full relative overscroll-y-contain",
                         // SCROLL LOCK LOGIC: Disable native scroll during drag to prevent interference
-                        isDragging ? "overflow-hidden touch-none" : "overflow-y-auto overflow-x-hidden"
+                        isDragging ? "overflow-hidden touch-none" : "overflow-y-auto overflow-x-hidden lg:overflow-y-hidden lg:overflow-x-auto"
                     )}
                     style={{ WebkitOverflowScrolling: 'touch' }}
                 >
@@ -231,7 +232,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                         )}>
                             <SortableContext items={columnIds} strategy={sortableStrategy}>
                                 <AnimatePresence mode="popLayout">
-                                    {columns.map((col, index) => (
+                                    {columns.map((col) => (
                                         <motion.div
                                             key={col.id}
                                             variants={staggerItem}
@@ -256,12 +257,27 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                                     ))}
                                 </AnimatePresence>
                             </SortableContext>
+
+                            {/* Add Column Button */}
+                            <motion.button
+                                layout
+                                onClick={() => createColumn()}
+                                className={cn(
+                                    "min-w-full lg:min-w-[350px] lg:w-[350px] h-[60px] lg:h-auto lg:self-stretch rounded-xl border-2 border-dashed flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 shrink-0 mb-32 lg:mb-0",
+                                    isDark 
+                                        ? "border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white" 
+                                        : "border-slate-300/50 hover:border-slate-400/80 bg-white/40 hover:bg-white/60 text-slate-500 hover:text-slate-700 backdrop-blur-sm"
+                                )}
+                            >
+                                <Plus size={24} />
+                                <span className="font-medium">Add Column</span>
+                            </motion.button>
                         </div>
                     </div>
                 </main>
 
                 {/* Column Dock (Mobile Only) - Rendered via Portal */}
-                <ColumnDock columns={columns} isDragging={isDragging} />
+                <ColumnDock columns={columns} isDragging={isDragging} addColumn={createColumn} />
 
                 {/* Keyboard Shortcuts Hint (Desktop only) */}
                 <motion.div 
@@ -269,7 +285,7 @@ function KanbanBoard({ projectId, onToggleSidebar }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                     className={cn(
-                        'hidden lg:flex items-center gap-4 px-8 py-3 text-xs fixed bottom-4 left-4',
+                        'hidden lg:flex items-center gap-4 px-8 py-3 text-xs absolute bottom-6 left-6 pointer-events-none',
                         isDark ? 'text-gray-600' : 'text-slate-400'
                     )}
                 >

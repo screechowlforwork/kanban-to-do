@@ -255,10 +255,16 @@ function ColumnContainer({
 
                     {/* Column Title */}
                     {!editMode ? (
-                        <h2 className={cn(
-                            'font-semibold text-sm tracking-wide uppercase',
-                            theme.textColor
-                        )}>
+                        <h2 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setEditMode(true);
+                            }}
+                            className={cn(
+                                'font-semibold text-sm tracking-wide uppercase cursor-pointer hover:opacity-70 transition-opacity',
+                                theme.textColor
+                            )}
+                        >
                             {column.title}
                         </h2>
                     ) : (
