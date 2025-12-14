@@ -312,14 +312,10 @@ function TaskCard({ task, deleteTask, updateTask, isOverlay }) {
             onTouchEnd={handleTouchEnd}
             className={cn(
                 'group relative flex w-full rounded-xl overflow-hidden',
-                isExpanded ? 'min-h-[200px]' : 'min-h-[100px]',
                 'transition-all duration-200 ease-out',
+                isExpanded ? 'min-h-[200px]' : 'min-h-[100px]',
                 isOverlay && 'scale-105 shadow-2xl rotate-2 z-50',
-                theme === 'gradient'
-                    ? 'bg-white/10 backdrop-blur-xl border border-white/20'
-                    : isDark
-                        ? 'bg-[#1A1A1E] border border-white/10'
-                        : 'bg-white border border-slate-200 shadow-sm',
+                themeConfig.taskCard,
                 pStyle.glow,
                 flash && (isDark
                     ? 'ring-2 ring-neon-green bg-neon-green/10'

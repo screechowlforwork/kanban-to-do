@@ -86,7 +86,7 @@ function ColumnContainer({
     deleteTask,
     updateTask,
 }) {
-    const { isDark, theme: appTheme } = useTheme();
+    const { isDark, theme: appTheme, themeConfig } = useTheme();
     const [editMode, setEditMode] = useState(false);
     
     // Accordion state: Default open
@@ -95,7 +95,7 @@ function ColumnContainer({
     // Detect mobile for conditional logic
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
-        setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
+        setIsMobile(typeof window !== 'undefined' && window.innerWidth < 1024);
     }, []);
 
     const tasksIds = useMemo(() => tasks.map(task => task.id), [tasks]);
@@ -162,11 +162,11 @@ function ColumnContainer({
                 ref={setNodeRef}
                 style={style}
                 className={cn(
-                    'w-full md:min-w-[350px] md:w-[350px] rounded-xl flex flex-col opacity-60',
-                    'h-[100px] md:h-full', // Smaller placeholder on mobile
+                    'w-full lg:min-w-[350px] lg:w-[350px] rounded-xl flex flex-col opacity-60',
+                    'h-[100px] lg:h-full', // Smaller placeholder on mobile
                     'border-2 border-dashed',
                     isDark ? 'border-neon-purple/50 bg-neon-purple/5' : 'border-purple-300 bg-purple-50',
-                    'mb-4 md:mb-0' // Margin for mobile vertical stack
+                    'mb-4 lg:mb-0' // Margin for mobile vertical stack
                 )}
             />
         );
@@ -188,17 +188,13 @@ function ColumnContainer({
                 // Mobile: Full width, vertical stack with margin
                 'w-full mb-4 shrink-0 flex flex-col rounded-xl',
                 // Desktop: Fixed width, full height, no margin (gap handles it)
-                'md:mb-0 md:min-w-[350px] md:w-[350px] md:h-full md:max-h-full',
+                'lg:mb-0 lg:min-w-[350px] lg:w-[350px] lg:h-full lg:max-h-full',
                 
                 // Height handling:
                 'transition-all duration-300',
                 
-                // Base background
-                appTheme === 'gradient' 
-                    ? 'bg-black/20 backdrop-blur-xl border border-white/10'
-                    : isDark 
-                        ? 'bg-[#0F0F12]' 
-                        : 'bg-white/90 backdrop-blur-sm shadow-sm',
+                // Base background: Tinted Glass
+                themeConfig.cardBg,
                 
                 // Drop zone feedback
                 // When collapsed (Mailbox): specific feedback on Header instead (handled below)
@@ -223,11 +219,8 @@ function ColumnContainer({
                     'group select-none',
                     
                     // Default Header Styles
-                    appTheme === 'gradient'
-                        ? 'bg-transparent border-b border-white/10'
-                        : isDark
-                            ? 'bg-[#0F0F12] border-b border-white/10'
-                            : 'bg-white border-b border-slate-200',
+                    'bg-transparent border-b',
+                    themeConfig.borderColor,
                             
                     // Mailbox Active Styles (Collapsed Drop)
                     // Highlight the header strongly to invite drop
@@ -242,7 +235,7 @@ function ColumnContainer({
             >
                 <div className="flex gap-3 items-center">
                     {/* Mobile Only: Chevron */}
-                    <div className="md:hidden text-gray-400">
+                    <div className="lg:hidden text-gray-400">
                         {isCollapsed ? <ChevronRight size={18} /> : <ChevronDown size={18} />}
                     </div>
 
@@ -298,7 +291,7 @@ function ColumnContainer({
                     className={cn(
                         'opacity-0 group-hover:opacity-100 transition-opacity p-2.5 rounded-lg touch-target',
                         // Mobile: Always visible if preferred, or rely on group-hover
-                        'opacity-100 md:opacity-0 touch-visible',
+                        'opacity-100 lg:opacity-0 touch-visible',
                         isDark
                             ? 'text-gray-500 hover:text-red-400 active:text-red-400 hover:bg-white/5 active:bg-white/10'
                             : 'text-slate-400 hover:text-red-500 active:text-red-500 hover:bg-slate-100 active:bg-red-50'
@@ -321,7 +314,7 @@ function ColumnContainer({
                         transition={{ duration: 0.2 }}
                         className={cn(
                             'flex-1 flex flex-col',
-                            'md:h-full md:opacity-100 md:block' // Force visible on desktop
+                            'lg:h-full lg:opacity-100 lg:block' // Force visible on desktop
                         )}
                     >
                         {/* Task List Container */}
@@ -331,7 +324,7 @@ function ColumnContainer({
                                 // Mobile: Min height for drop target only when open
                                 'min-h-[150px]',
                                 // Desktop: Scrollable area
-                                'md:overflow-y-auto md:overflow-x-hidden no-scrollbar'
+                                'lg:overflow-y-auto lg:overflow-x-hidden no-scrollbar'
                             )}
                             style={{
                                 overscrollBehaviorY: 'contain',
@@ -411,11 +404,7 @@ function ColumnContainer({
                                     'flex gap-2 items-center justify-center w-full py-3 rounded-lg touch-target',
                                     'border border-dashed transition-all duration-200 bg-transparent',
                                     'font-medium text-sm',
-                                    appTheme === 'gradient'
-                                        ? 'border-white/40 text-white/60 hover:bg-white/10 hover:text-white active:bg-white/20'
-                                        : isDark
-                                            ? 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300 hover:bg-white/5 active:bg-white/10'
-                                            : 'border-slate-300 text-slate-400 hover:border-slate-400 hover:text-slate-600 hover:bg-slate-50 active:bg-slate-100'
+                                    themeConfig.addTaskButton
                                 )}
                                 onClick={() => createTask(column.id)}
                             >

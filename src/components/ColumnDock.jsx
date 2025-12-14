@@ -1,8 +1,8 @@
+import { createPortal } from 'react-dom';
 import { useDroppable } from '@dnd-kit/core';
 import { useTheme } from '../contexts/ThemeContext';
 import { cn } from '../utils';
-import { useEffect, useState } from 'react';
-import { ChevronsUp } from 'lucide-react';
+import { useEffect } from 'react';
 
 /**
  * Dock Item Component
@@ -114,17 +114,21 @@ function DockItem({ column, isDark, mode }) {
  * Mobile Navigation & Teleport Dock
  * - Idle: Bottom Navigation Bar to jump between columns
  * - Dragging: Floating Teleport Dock to move tasks
+ * - Uses createPortal to escape parent overflow/transform constraints
  */
 export default function ColumnDock({ columns, isDragging }) {
     const { isDark } = useTheme();
     const mode = isDragging ? 'drop' : 'nav';
 
-    return (
+    // Render via Portal to ensure fixed positioning works correctly
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <div
             className={cn(
-                'fixed z-50 transition-all duration-300 md:hidden flex items-center justify-around',
-                // All modes are now floating to avoid UI overlap
-                'bottom-6 left-4 right-4',
+                'fixed z-[9999] transition-all duration-300 lg:hidden flex items-center justify-around',
+                // Safe area padding for notched devices
+                'bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4',
                 // Mode Switching Styles
                 mode === 'drop' 
                     ? cn(
@@ -134,11 +138,8 @@ export default function ColumnDock({ columns, isDragging }) {
                     )
                     : cn(
                         'h-16', // Compact for nav
-                        'rounded-full border backdrop-blur-md shadow-lg px-4', // Floating Pill Shape
-                        isDark ? 'bg-[#1A1A1E]/80 border-white/5' : 'bg-white/80 border-slate-200',
-                        // Avoid overlapping with FAB (assuming FAB is bottom-right)
-                        // Adding max-width or margin-right might be needed if FAB is huge, 
-                        // but floating center usually avoids corners.
+                        'rounded-full border backdrop-blur-md shadow-lg px-4',
+                        isDark ? 'bg-[#1A1A1E]/80 border-white/5' : 'bg-white/80 border-slate-200'
                     )
             )}
         >
@@ -150,6 +151,7 @@ export default function ColumnDock({ columns, isDragging }) {
                     mode={mode}
                 />
             ))}
-        </div>
+        </div>,
+        document.body
     );
 }

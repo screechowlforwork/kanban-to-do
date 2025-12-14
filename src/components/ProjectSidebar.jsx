@@ -86,7 +86,7 @@ function ProjectSidebar({
                 {isOpen && (
                     <motion.div
                         {...fadeInOut}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
                         onClick={onClose}
                     />
                 )}
@@ -102,8 +102,8 @@ function ProjectSidebar({
                 className={cn(
                     'fixed inset-y-0 left-0 z-50 flex flex-col',
                     'w-[280px] h-[100dvh]',
-                    'md:relative md:h-full md:translate-x-0 md:!transform-none md:z-0',
-                    'shadow-2xl md:shadow-none',
+                    'lg:relative lg:h-full lg:translate-x-0 lg:!transform-none lg:z-0',
+                    'shadow-2xl lg:shadow-none',
                     themeConfig.sidebarBg,
                     themeConfig.borderColor,
                     'border-r'
@@ -131,7 +131,7 @@ function ProjectSidebar({
                     <button
                         onClick={onClose}
                         className={cn(
-                            'md:hidden p-2 rounded-lg transition-colors',
+                            'lg:hidden p-2 rounded-lg transition-colors',
                             isDark ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-slate-100 text-slate-500'
                         )}
                     >
