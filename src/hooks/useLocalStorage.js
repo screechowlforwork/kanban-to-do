@@ -9,26 +9,37 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  * @returns {[*, Function, Function]} - [value, setValue, removeValue]
  */
 export function useLocalStorage(key, initialValue) {
-    // Helper function to get value from localStorage
-    const getStoredValue = useCallback(() => {
+    // Store initialValue in a ref to avoid re-renders when it changes reference
+    const initialValueRef = useRef(initialValue);
+    
+    // Track previous key to detect changes
+    const prevKeyRef = useRef(key);
+    
+    // Get initial value from localStorage or use fallback
+    const [storedValue, setStoredValue] = useState(() => {
         try {
             const item = localStorage.getItem(key);
-            return item !== null ? JSON.parse(item) : initialValue;
+            return item !== null ? JSON.parse(item) : initialValueRef.current;
         } catch (error) {
             console.warn(`[useLocalStorage] Error reading "${key}":`, error);
-            return initialValue;
+            return initialValueRef.current;
         }
-    }, [key, initialValue]);
+    });
 
-    // Get initial value from localStorage or use fallback
-    const [storedValue, setStoredValue] = useState(getStoredValue);
-
-    // CRITICAL FIX: Re-read from localStorage when key changes
-    // This is essential for project switching to work correctly
+    // Re-read from localStorage ONLY when key actually changes
     useEffect(() => {
-        const newValue = getStoredValue();
-        setStoredValue(newValue);
-    }, [key, getStoredValue]);
+        if (prevKeyRef.current !== key) {
+            prevKeyRef.current = key;
+            try {
+                const item = localStorage.getItem(key);
+                const newValue = item !== null ? JSON.parse(item) : initialValueRef.current;
+                setStoredValue(newValue);
+            } catch (error) {
+                console.warn(`[useLocalStorage] Error reading "${key}":`, error);
+                setStoredValue(initialValueRef.current);
+            }
+        }
+    }, [key]);
 
     // Persist to localStorage whenever value changes
     // Use a ref to track the current key to avoid stale writes
@@ -57,11 +68,11 @@ export function useLocalStorage(key, initialValue) {
     const removeValue = useCallback(() => {
         try {
             localStorage.removeItem(key);
-            setStoredValue(initialValue);
+            setStoredValue(initialValueRef.current);
         } catch (error) {
             console.error(`[useLocalStorage] Error removing "${key}":`, error);
         }
-    }, [key, initialValue]);
+    }, [key]);
 
     return [storedValue, setValue, removeValue];
 }
