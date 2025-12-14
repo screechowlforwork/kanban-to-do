@@ -140,7 +140,7 @@ function ProjectSidebar({
                 </div>
 
                 {/* Project List - iOS scroll isolation */}
-                <div className="flex-1 ios-scroll-y p-3 flex flex-col gap-1.5">
+                <div className="flex-1 ios-scroll-y px-4 py-3 flex flex-col gap-1.5">
                     <AnimatePresence mode="popLayout">
                         {projects.map((project, index) => (
                             <motion.div
