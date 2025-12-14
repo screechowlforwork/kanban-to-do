@@ -141,18 +141,21 @@ function ProjectSidebar({
 
                 {/* Project List - iOS scroll isolation */}
                 <div className="flex-1 ios-scroll-y px-4 py-3 flex flex-col gap-1.5">
-                    <AnimatePresence mode="popLayout">
+                    <AnimatePresence mode="sync">
                         {projects.map((project, index) => (
                             <motion.div
                                 key={project.id}
-                                layout
+                                layout="position"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                transition={{ delay: index * 0.03 }}
+                                transition={{ 
+                                    delay: index * 0.03,
+                                    layout: { duration: 0.2 }
+                                }}
                                 onClick={() => onSelectProject(project.id)}
                                 className={cn(
-                                    'p-3 rounded-xl cursor-pointer flex justify-between items-center group transition-all duration-200',
+                                    'p-3 rounded-xl cursor-pointer flex justify-between items-center group transition-colors duration-200',
                                     project.id === activeProjectId
                                         ? isDark
                                             ? 'bg-gradient-to-r from-neon-purple/15 to-transparent text-neon-purple border border-neon-purple/20'
